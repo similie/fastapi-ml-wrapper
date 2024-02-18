@@ -18,7 +18,7 @@ class TestPredictor(BasePredictor):
   # it's own routes, mapping them to the relevant structure.
   # Keep all models and subscribe but use custom routes for predict, fine-tune and train. 
 
-  async def template():
+  async def template(self):
     return {'schema': 'test predictor schema'} 
   
   async def fineTune(self, payload: Any):
