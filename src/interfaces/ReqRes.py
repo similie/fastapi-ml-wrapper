@@ -1,10 +1,10 @@
-from datetime import date, datetime
+from datetime import datetime
 from typing import Any
 from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, UUID4
-#from app.models import MLModel List
 
-## Request and Response Classes for input/output validation ##
+# Request and Response Classes for input/output validation #
+
 
 # Request Classes
 class BasePostRequest(BaseModel):
@@ -13,8 +13,9 @@ class BasePostRequest(BaseModel):
   by model name.
   '''
   model_config = ConfigDict(extra='ignore')
-  
+
   modelName: str | None = None
+
 
 class WebhookRequest(BasePostRequest):
   '''
@@ -25,6 +26,7 @@ class WebhookRequest(BasePostRequest):
   id: UUID4 = Field(
     default_factory=lambda: uuid4()
   )
+
 
 # Response Classes
 class BaseResponse(BaseModel):
@@ -38,6 +40,7 @@ class BaseResponse(BaseModel):
     default_factory=lambda: int(datetime.now().timestamp() * 1000)
   )
 
+
 class ListTypeResponse(BaseResponse):
   '''
   Returns a list of string values and count (with the current UTC unix millis
@@ -46,10 +49,11 @@ class ListTypeResponse(BaseResponse):
   count: int | None = 0
   data: list[str]
 
+
 class TemplateRespose(BaseResponse):
   '''
   Container type for template responses from Prediction models. Note: uses
-  "template" rather than "schema" to avoid prop name conflicts. 
+  "template" rather than "schema" to avoid prop name conflicts.
   '''
   model_config = ConfigDict()
   template: dict[str, Any]

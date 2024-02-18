@@ -1,5 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Response, Request
-from pydantic import BaseModel
+from fastapi import APIRouter, Response  # , Request, BackgroundTasks
 
 from app.config import getConfig
 from ..prediction_models.AllModelsService import getModelNames, modelForPayload
@@ -21,12 +20,14 @@ routes = APIRouter(
 # a webhook subscription in the payload body for receiving event messages
 # See: https://fastapi.tiangolo.com/tutorial/background-tasks/
 
+
 @routes.get('/')
 async def home():
   '''
   Return a welcome message on API root endpoint
   '''
-  return { "msg": "Welcome to the Web ML Wrapper" }
+  return {"msg": "Welcome to the Web ML Wrapper"}
+
 
 @routes.get('/models')
 async def all_models() -> ListTypeResponse:
@@ -36,6 +37,7 @@ async def all_models() -> ListTypeResponse:
   data = getModelNames()
   return ListTypeResponse(data=data, count=len(data))
 
+
 @routes.get('/template/{model_name}')
 async def model_schema(model_name: str) -> BaseResponse:
   '''
@@ -43,14 +45,15 @@ async def model_schema(model_name: str) -> BaseResponse:
   with the specfied name.
   '''
   model = modelForPayload(BasePostRequest(modelName=model_name))
-  if model != None:
+  if model is not None:
     modelSchema = await model.template()
     result = TemplateRespose(template=modelSchema)
     return result
-  
+
   return Response('Resource not found', 404)
 
-#TODO: Endpoints for: inference, fine-tuning & training 
+
+# TODO: Endpoints for: inference, fine-tuning & training
 @routes.post('/predict/{model_name}')
 async def run_model_inference(model_name: str, req: BasePostRequest):
   '''
@@ -61,11 +64,12 @@ async def run_model_inference(model_name: str, req: BasePostRequest):
   See the model template for details of the expected body format.
   '''
   model = modelForPayload(BasePostRequest(modelName=model_name))
-  if model != None:
+  if model is not None:
     res = await model.predict(req)
     return res
-   
+
   return Response('Resource not found', 404)
+
 
 @routes.post('/fine-tune/{model_name}')
 async def fine_tune_model(model_name: str, req: BasePostRequest):
@@ -77,11 +81,12 @@ async def fine_tune_model(model_name: str, req: BasePostRequest):
   See the model template for details of the expected body format.
   '''
   model = modelForPayload(BasePostRequest(modelName=model_name))
-  if model != None:
+  if model is not None:
     res = await model.fineTune(req)
     return res
-   
+
   return Response('Resource not found', 404)
+
 
 @routes.post('/fine-tune-with-csv/{model_name}')
 async def fine_tune_with_csv_upload(model_name: str, req: BasePostRequest):
@@ -93,8 +98,8 @@ async def fine_tune_with_csv_upload(model_name: str, req: BasePostRequest):
   See the model template for details of the expected body format.
   '''
   model = modelForPayload(BasePostRequest(modelName=model_name))
-  if model != None:
+  if model is not None:
     res = await model.fineTune(req)
     return res
-   
+
   return Response('Resource not found', 404)

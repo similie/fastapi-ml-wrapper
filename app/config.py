@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class ConfigSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
     # custom properties (provide defaults or environment vars)
@@ -14,6 +15,7 @@ class ConfigSettings(BaseSettings):
     @property
     def apiEndpoint(self) -> str:
       return self.api_endpoint if (self.api_endpoint.startswith('/')) else f'/{self.api_endpoint}'
+
 
 @lru_cache
 def getConfig():

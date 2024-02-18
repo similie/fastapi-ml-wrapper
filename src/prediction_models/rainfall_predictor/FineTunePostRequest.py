@@ -2,6 +2,7 @@ from datetime import datetime, date
 from pydantic import Field
 from ...interfaces.ReqRes import BasePostRequest
 
+
 class FineTunePostRequest(BasePostRequest):
   '''
   POST Request model representing a fine-tuning refresh request

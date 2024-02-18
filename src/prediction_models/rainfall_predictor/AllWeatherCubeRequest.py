@@ -3,6 +3,7 @@ from ...interfaces.CubeJsQueryResponse import QueryMeasures
 from ...interfaces.CubeJsQueryRequest import CubeQueryRequest
 from .AllWeatherConfig import getAllWeatherConfig
 
+
 class AllWeatherQueryMeasures(QueryMeasures):
   '''
   Base all-weather field names that an all-weather station aggregation
@@ -18,6 +19,7 @@ class AllWeatherQueryMeasures(QueryMeasures):
   avg_humidity: float | None = 0
   avg_pressure: float | None = 0
   sum_precipitation: float | None = 0
+
 
 def makeAllWeatherQueryReq(dateRange: list[str], stationIds: list[int] = []):
   '''

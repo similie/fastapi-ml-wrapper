@@ -1,8 +1,8 @@
 from datetime import datetime
-from pydantic import ConfigDict
 from ...interfaces.CubeJsQueryResponse import QueryMeasuresResponse, CubeQueryResponse
 from .AllWeatherCubeRequest import AllWeatherQueryMeasures
 from .AllWeatherConfig import getAllWeatherConfig
+
 
 class AllWeatherQueryMeasuresResponse(AllWeatherQueryMeasures, QueryMeasuresResponse):
   '''
@@ -12,9 +12,10 @@ class AllWeatherQueryMeasuresResponse(AllWeatherQueryMeasures, QueryMeasuresResp
   result in a dataset with each aggregated value per date per station.
   '''
   # station: int | None = None # inherited
-  hour: datetime #ISO date
-  # date: datetime #ISO date (inherited)
-  
+  hour: datetime  # ISO date
+  # date: datetime  # ISO date (inherited)
+
+
 class AllWeatherCubeQueryResponse(CubeQueryResponse):
   '''
   Subclass overrides the type of the data in the data[list].
@@ -37,12 +38,12 @@ class AllWeatherCubeQueryResponse(CubeQueryResponse):
 #   "all_weather.sum_precipitation": 0
 # },
 
+
 def cleanCubeNameFromResponseKeys(res: str) -> str:
   '''
-  Removes the cube name and other illegal JSON key names from
-  the response. E.g. date.hour. 
-  Note, depending on the aggregation time period used in the cube definition
-  this may need to change to one of the values of TimeGranularity.
+  Removes the cube name and other illegal JSON key names from the response,
+  e.g. date.hour. Note: depending on the aggregation time period used in the cube
+  definition this may need to change to one of the values of TimeGranularity.
   '''
   cubeName = getAllWeatherConfig().cube_name
   if not cubeName.endswith('.'):

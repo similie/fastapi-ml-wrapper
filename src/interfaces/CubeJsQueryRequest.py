@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from .CubeJsQuery import CubeQuery
 
+
 class CubeQueryRequest(BaseModel):
   '''
   Wrapper class that puts a 'query' field at the head of CubeQuery so

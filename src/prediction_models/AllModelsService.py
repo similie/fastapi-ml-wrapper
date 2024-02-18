@@ -7,16 +7,16 @@ from ..interfaces.ReqRes import BasePostRequest
 # even if they are not directly used. The references need to be in scope
 # or the factory function modelForPayload will fail to resolve.
 from .BasePredictor import BasePredictor
-from .RainfallPredictor import RainfallPredictor
-from .TestPredictor import TestPredictor
-# from MyPredictor[.py] import MyPredictor [Class]
+from .RainfallPredictor import RainfallPredictor  # noqa
+from .TestPredictor import TestPredictor  # noqa
+# from MyPredictor[.py] import MyPredictor[Class]  # noqa
 
 # "_allModels" is a list of all the callable models in this container.
 # Keys are sent back to the discovery service for use as model names for
 # further API calls. As such a Value for each Key must resolve to a Prediction
 # Class so that the 'modelForPayload' factory function can instantiate the
 # correct class.
-# 
+#
 # Notes.
 # The 'modelForPayload' function heavily validates the input payload and
 # returns a new instance of the specified class when succesful or None
@@ -30,19 +30,25 @@ _allModels = {
   'test': 'TestPredictor'
   }
 
-# Return the list of available models
+
 def getModelNames():
+  '''
+  Return the list of available models
+  '''
   return list(_allModels.keys())
 
-# Factory function to instantiate a predictor class from payload.model
-# See notes on _allModels above. 
+
 def modelForPayload(payload: BasePostRequest):
+  '''
+  Factory function to instantiate a predictor class from payload.model
+  See notes on _allModels above.
+  '''
   model = None
   modelName = payload.modelName
   if (any(modelName in x for x in _allModels)):
     className = _allModels[modelName]
     classRef = globals().get(className)
-    if (classRef != None):
+    if (classRef is not None):
       classInstance = classRef(payload)
       if (isinstance(classInstance, BasePredictor)):
         model = classInstance

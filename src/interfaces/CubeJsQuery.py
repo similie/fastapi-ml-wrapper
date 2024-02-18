@@ -1,7 +1,8 @@
 from enum import Enum
 from typing import Any
 from datetime import datetime, date
-from pydantic import BaseModel, ConfigDict, computed_field
+from pydantic import BaseModel, ConfigDict
+
 
 class TimeGranularity(str, Enum):
   '''
@@ -17,6 +18,7 @@ class TimeGranularity(str, Enum):
   Minute = 'minute'
   Second = 'second'
 
+
 class QueryMeasures(BaseModel):
   '''
   These are the base field names that the Cube query engine will be called with
@@ -27,7 +29,7 @@ class QueryMeasures(BaseModel):
   def measures(self, prefix: str = '') -> list[str]:
     '''
     Exports a list of strings in the format: cubename.fieldname that can
-    be assigned to a query's measures field. 
+    be assigned to a query's measures field.
     '''
     s = prefix
     if (len(prefix) > 0) and not (prefix.endswith('.')):
@@ -39,6 +41,7 @@ class QueryMeasures(BaseModel):
 
     return result
 
+
 class TimeDimension(BaseModel):
   '''
   The date field and granularity by which the aggregation table was accumulated
@@ -46,6 +49,7 @@ class TimeDimension(BaseModel):
   dimension: str
   granularity: TimeGranularity
   dateRange: tuple[datetime | date, datetime | date]
+
 
 class QueryFilter(BaseModel):
   '''
@@ -57,6 +61,7 @@ class QueryFilter(BaseModel):
   # ENUM of operators that each depend on the type of the underlying member field
   operator: str
   values: list[int]
+
 
 class CubeQuery(BaseModel):
   '''
@@ -81,7 +86,7 @@ class CubeQuery(BaseModel):
 
   The typing definition for this is encapsulated in the OR definition below
   to keep the model hierarchy simpler (& since we don't normally need the query
-  on the way out anyway) 
+  on the way out anyway)
   '''
   measures: list[str]
   timeDimensions: list[TimeDimension]

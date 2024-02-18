@@ -7,9 +7,8 @@
 
 import abc
 from typing import Any
-from uuid import uuid4
-from pydantic import HttpUrl, UUID4
 from ..interfaces.ReqRes import BasePostRequest
+
 
 class BasePredictor(abc.ABC):
   '''
@@ -25,7 +24,7 @@ class BasePredictor(abc.ABC):
   @abc.abstractmethod
   async def template(self) -> dict[str, Any]:
     pass
-  
+
   @abc.abstractmethod
   async def predict(self, payload: Any) -> dict[str, Any]:
     pass

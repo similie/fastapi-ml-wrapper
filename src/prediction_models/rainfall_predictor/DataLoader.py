@@ -1,10 +1,12 @@
-from httpx import get, URL, Request, Headers
+from httpx import get, URL
+# TODO: import when headers is running, Request, Headers
 from urllib import parse
 from .AllWeatherCubeRequest import makeAllWeatherQueryReq
 from .AllWeatherCubeResponse import AllWeatherCubeQueryResponse, cleanCubeNameFromResponseKeys
 from .AllWeatherConfig import getAllWeatherConfig
 
-def loadJson(dateRange: list[str], stationIds: list[int]=[]):
+
+def loadJson(dateRange: list[str], stationIds: list[int] = []):
   config = getAllWeatherConfig()
   baseUrl = config.cube_restapi
   req = makeAllWeatherQueryReq(dateRange, stationIds)
@@ -12,11 +14,11 @@ def loadJson(dateRange: list[str], stationIds: list[int]=[]):
   # Note. Doesn't like my double quotes, switch them to %22 from %27
   queryParam = parse.urlencode(modelDump, encoding='utf-8').replace('%27', '%22')
 
-  #TODO: Get auth token for production CubeJs instance
+  # TODO: Get auth token for production CubeJs instance
   # headers = Headers(['Authorization','Bearer My-Madeup-Token'])
 
   url = URL(baseUrl)
-  res = get(url, params=queryParam) # possibly POST to loose the URL encoding part. TODO: TEST
+  res = get(url, params=queryParam)  # possibly POST to loose the URL encoding part. TODO: TEST
   status = res.status_code
   jsonString = cleanCubeNameFromResponseKeys(res.text)
   result = AllWeatherCubeQueryResponse.model_validate_json(jsonString)
@@ -25,4 +27,4 @@ def loadJson(dateRange: list[str], stationIds: list[int]=[]):
   print(f"Status: {status}, rows:{result.total}, Bytes: {res.num_bytes_downloaded}")
   return result
 
-#TODO load data frames from PG instance.
+# TODO load data frames from PG instance.

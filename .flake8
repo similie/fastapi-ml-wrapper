@@ -1,0 +1,10 @@
+[flake8]
+indent-size=2
+max_line_length = 120
+extend-exclude =
+    tmp
+    .venv
+[multi_line]
+max_line_length = 120
+# Add this line to allow two spaces indentation for multi-line strings
+multiline_string_format = 'consistent'
