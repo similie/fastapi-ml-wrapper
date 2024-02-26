@@ -5,22 +5,22 @@ from .AllWeatherConfig import getAllWeatherConfig
 
 
 class AllWeatherQueryMeasuresResponse(AllWeatherQueryMeasures, QueryMeasuresResponse):
-  '''
-  All-weather fields additionally returned from a successful response. Station
-  will be present if it was included as a dimension in the source query. E.g.
-  setting a dimension of station and multiple station Ids in a filter will
-  result in a dataset with each aggregated value per date per station.
-  '''
-  # station: int | None = None # inherited
-  hour: datetime  # ISO date
-  # date: datetime  # ISO date (inherited)
+    '''
+    All-weather fields additionally returned from a successful response. Station
+    will be present if it was included as a dimension in the source query. E.g.
+    setting a dimension of station and multiple station Ids in a filter will
+    result in a dataset with each aggregated value per date per station.
+    '''
+    # station: int | None = None # inherited
+    hour: datetime  # ISO date
+    # date: datetime  # ISO date (inherited)
 
 
 class AllWeatherCubeQueryResponse(CubeQueryResponse):
-  '''
-  Subclass overrides the type of the data in the data[list].
-  '''
-  data: list[AllWeatherQueryMeasuresResponse]
+    '''
+    Subclass overrides the type of the data in the data[list].
+    '''
+    data: list[AllWeatherQueryMeasuresResponse]
 
 # Example response with a station dimension included in the request
 # {
@@ -40,19 +40,19 @@ class AllWeatherCubeQueryResponse(CubeQueryResponse):
 
 
 def cleanCubeNameFromResponseKeys(res: str) -> str:
-  '''
-  Removes the cube name and other illegal JSON key names from the response,
-  e.g. date.hour. Note: depending on the aggregation time period used in the cube
-  definition this may need to change to one of the values of TimeGranularity.
-  '''
-  cubeName = getAllWeatherConfig().cube_name
-  if not cubeName.endswith('.'):
-    cubeName = cubeName + '.'
+    '''
+    Removes the cube name and other illegal JSON key names from the response,
+    e.g. date.hour. Note: depending on the aggregation time period used in the cube
+    definition this may need to change to one of the values of TimeGranularity.
+    '''
+    cubeName = getAllWeatherConfig().cube_name
+    if not cubeName.endswith('.'):
+        cubeName = cubeName + '.'
 
-  result = res.replace(cubeName, '')
-  if result.find('date.hour') >= 0:
-    # TODO: iterate TimeGranularity and change to 'time_granularity'
-    # or similar if one of them is in date.<enum search>
-    result = result.replace('date.hour', 'hour')
+    result = res.replace(cubeName, '')
+    if result.find('date.hour') >= 0:
+        # TODO: iterate TimeGranularity and change to 'time_granularity'
+        # or similar if one of them is in date.<enum search>
+        result = result.replace('date.hour', 'hour')
 
-  return result
+    return result

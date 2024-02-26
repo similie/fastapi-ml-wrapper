@@ -8,7 +8,7 @@ from ..interfaces.ReqRes import BasePostRequest
 # or the factory function modelForPayload will fail to resolve.
 from .BasePredictor import BasePredictor
 from .RainfallPredictor import RainfallPredictor  # noqa
-from .TestPredictor import TestPredictor  # noqa
+from .TestPredictor import ATestPredictor  # noqa
 # from MyPredictor[.py] import MyPredictor[Class]  # noqa
 
 # "_allModels" is a list of all the callable models in this container.
@@ -26,31 +26,31 @@ from .TestPredictor import TestPredictor  # noqa
 # - the value associated with the key doesn't resolve to a known class,
 # - that class isn't a subclass of BasePredictor (for type narrowing)
 _allModels = {
-  'rainfall': 'RainfallPredictor',
-  'test': 'TestPredictor'
-  }
+    'rainfall': 'RainfallPredictor',
+    'test': 'ATestPredictor'
+}
 
 
 def getModelNames():
-  '''
-  Return the list of available models
-  '''
-  return list(_allModels.keys())
+    '''
+    Return the list of available models
+    '''
+    return list(_allModels.keys())
 
 
 def modelForPayload(payload: BasePostRequest):
-  '''
-  Factory function to instantiate a predictor class from payload.model
-  See notes on _allModels above.
-  '''
-  model = None
-  modelName = payload.modelName
-  if (any(modelName in x for x in _allModels)):
-    className = _allModels[modelName]
-    classRef = globals().get(className)
-    if (classRef is not None):
-      classInstance = classRef(payload)
-      if (isinstance(classInstance, BasePredictor)):
-        model = classInstance
+    '''
+    Factory function to instantiate a predictor class from payload.model
+    See notes on _allModels above.
+    '''
+    model = None
+    modelName = payload.modelName
+    if (any(modelName in x for x in _allModels)):
+        className = _allModels[modelName]
+        classRef = globals().get(className)
+        if (classRef is not None):
+            classInstance = classRef(payload)
+            if (isinstance(classInstance, BasePredictor)):
+                model = classInstance
 
-  return model
+    return model
