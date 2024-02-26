@@ -10,7 +10,7 @@ This document provides coding conventions for the Python code in the Project Beg
 
 ### Line Length
 
-- Limit all lines to a maximum of 79 characters for code and 72 for comments and docstrings.
+- Limit all lines to a maximum of 119 characters for code and 112 for comments and docstrings.
 
 ### Imports
 
@@ -18,8 +18,6 @@ This document provides coding conventions for the Python code in the Project Beg
     1. Standard library imports.
     2. Related third-party imports.
     3. Local application/library-specific imports.
-
-  You should put a blank line between each group of imports.
 
 ### Whitespace
 
@@ -38,17 +36,10 @@ This document provides coding conventions for the Python code in the Project Beg
 
 ## Naming Conventions
 
-### Variables
+### Variables, Functions & Classes
 
-- Use lowercase with words separated by underscores as necessary to improve readability.
-
-### Functions
-
-- Function names should be lowercase, with words separated by underscores as necessary to improve readability.
-
-### Classes
-
-- Class names should follow the `CamelCase` naming convention.
+Should follow the `CamelCase` naming convention. Folders, where used to group common pieces of code together
+should be `snake_case`
 
 ### Constants
 
@@ -58,7 +49,7 @@ This document provides coding conventions for the Python code in the Project Beg
 
 ### Use `is` or `is not` for Singleton Objects
 
-- Use `is` or `is not` for comparisons with `None`.
+- Use `is` or `is not` for comparisons with `None` and `True` / `False`
 
 ### Accessing Dictionary Elements
 
@@ -68,11 +59,20 @@ This document provides coding conventions for the Python code in the Project Beg
 
 - Use list, dict, and set comprehensions to make your code more concise and readable when appropriate.
 
+### Data models
+
+- All data passed in though API routes, as responses to API routes and internally for data manipulation
+*MUST* have a corresponding Pydantic model class. Any data transferred internall or received (e.g. from an external resource) 
+*MUST* be validated against this model using the standard Pydantic `model_validate` function which will return
+a valid model instance (if your data is valid) or throw an exception. If your class makes use of optionals, 
+auto-instantiated field values or overrides the modelConfig, you must include a test for your class.
+
 ## Testing
 
 - Write tests for new code.
-- Use the `unittest` or `pytest` frameworks.
+- Use the `pytest` framework.
 - Follow the test naming conventions and structure tests logically.
+- There is no need to test code in 3rd party libraries, just how your code interacts with it.
 
 ## Documentation
 
