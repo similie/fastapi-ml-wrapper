@@ -19,10 +19,14 @@ class BasePostRequest(BaseModel):
 
 class WebhookRequest(BasePostRequest):
     '''
-    Struct encapsulating a webhook
+    Struct encapsulating a webhook. When the specified event triggers, POSTS
+    a JSON encoded WebhookResponse to the callback url, adding the Auth token
+    to the response header in the form: Authorization: bearer TOKEN. Responses
+    from this callback are discarded.
     '''
     callbackUrl: HttpUrl
-    eventName: str
+    callbackAuthToken: UUID4
+    eventNames: list[str] = '*'
     id: UUID4 = Field(
         default_factory=lambda: uuid4()
     )
@@ -38,6 +42,16 @@ class BaseResponse(BaseModel):
     timestamp: int = Field(
         default_factory=lambda: int(datetime.now().timestamp() * 1000)
     )
+
+
+class WebhookResponse(BaseResponse):
+    '''
+    Response model POSTED to a callback webhook. Contains a unix millis
+    timestamp (from BaseReponse) status code, event name and message
+    '''
+    status: int = 200
+    eventName: str = '*'
+    message: str = ''
 
 
 class ListTypeResponse(BaseResponse):

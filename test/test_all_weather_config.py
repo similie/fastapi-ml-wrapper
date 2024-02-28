@@ -14,4 +14,4 @@ def test_get_config():
 def test_api_endpoint():
     config = getAllWeatherConfig()
     assert len(config.cube_name) > 0
-    assert config.cube_restapi.startswith('http')
+    assert config.cube_rest_api.startswith('http')
