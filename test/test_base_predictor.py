@@ -39,10 +39,11 @@ def test_mock_instance_creator():
 @pytest.mark.asyncio
 async def test_predictor_template():
     predictor = MockTestPredictor()
-    result = await predictor.template()
-    assert result is not None
-    assert result.keys().__contains__('schema')
-    assert result['schema'] == 'test predictor schema'
+    t = await predictor.template()
+    assert t is not None
+    assert t.name == 'ATestPredictor'
+    assert t.notes == 'test predictor schema'
+    # assert t.properties.fieldOne == 'f1'
 
 
 @pytest.mark.asyncio

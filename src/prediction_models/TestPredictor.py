@@ -1,14 +1,27 @@
 from typing import Any
+from pydantic import BaseModel
 from .BasePredictor import BasePredictor
+from ..interfaces.ReqRes import TemplateResponse
+
+
+class ATestTemplateProps(BaseModel):
+    '''
+    Properties model for ATestPredictor Template
+    '''
+    fieldOne: str = 'f1'
+    fieldTwo: int = 1
 
 
 class ATestPredictor(BasePredictor):
     '''
     Implementation class of abstract BasePredictor for testing
     '''
-    async def template(self):
-        await super().template()
-        return {'schema': 'test predictor schema'}
+    async def template(self) -> TemplateResponse:
+        t = await super().template()
+        t.notes = 'test predictor schema'
+        t.events = ['onTest']
+        t.accepts = ATestTemplateProps.model_json_schema()
+        return t
 
     async def fineTune(self, payload: Any):
         await super().fineTune(payload)

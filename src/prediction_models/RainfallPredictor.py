@@ -1,8 +1,10 @@
 from typing import Any
 from pydantic import ValidationError
 from .BasePredictor import BasePredictor
+from ..interfaces.ReqRes import TemplateResponse
 from .rainfall_predictor.DataLoader import loadJson
 from .rainfall_predictor.PredictionPostRequests import CubePredictionPostRequest, ForecastPredictionPostRequest
+from .rainfall_predictor.AllWeatherCubeRequest import AllWeatherQueryMeasures
 from .rainfall_predictor.AllWeatherCubeResponse import AllWeatherQueryMeasuresResponse
 
 
@@ -13,13 +15,15 @@ class RainfallPredictor(BasePredictor):
     def __init__(self, payload) -> None:
         super().__init__(payload)
 
-    async def template(self):
+    async def template(self) -> TemplateResponse:
         t = await super().template()
         t.notes = '''
-        Input properties are weather data, post requests return immediately
-         and call back results via the supplied webhook request
+        Input properties are a list of weather data. `POST` requests return
+        immediately and results are supplied via the callback parameters
+        specified in the webhook
         '''
-
+        t.events = ['onPredict', 'onForecast']
+        t.accepts = AllWeatherQueryMeasures.model_json_schema()
         return t
 
     async def __loadCubeJson(self, payload: CubePredictionPostRequest):

@@ -81,6 +81,7 @@ def test_post_unknown_model_fine_tune_csv():
 # Section to test model repsonses to the test model
 def test_get_model_template():
     res = client.get('/api/v1/template/test')
+    print(res)
     assert res.status_code == 200
 
 

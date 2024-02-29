@@ -9,7 +9,7 @@ def loadJsonFixture():
     '''
     load the sample Json file to the Cube query resonse model format.
     '''
-    p = path.join(getcwd(), 'test', 'fixtures', 'dataloader.json')
+    p = path.join(getcwd(), 'test', 'fixtures', 'all_weather_cube_query_response.json')
     with open(p, 'r') as file:
         jsonData = json.load(file)
         return json.dumps(jsonData)

@@ -41,12 +41,10 @@ class BasePredictor(abc.ABC):
     async def template(self) -> TemplateResponse:
         result = TemplateResponse(
             name=self.__class__.__name__,
-            version='1',
-            properties={},
+            accepts={},
             events=[],
-            returns=BackgroundTaskResponse(),
-            notes=''
-        )
+            returns=BackgroundTaskResponse.model_json_schema()
+            )
         return result
 
     @abc.abstractmethod

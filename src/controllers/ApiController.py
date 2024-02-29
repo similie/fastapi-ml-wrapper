@@ -47,7 +47,8 @@ async def model_schema(model_name: str) -> BaseResponse:
     model = modelForPayload(BasePostRequest(modelName=model_name))
     if model is not None:
         result = await model.template()
-        return result
+        print(result)
+        return result.model_dump()
 
     return Response('Resource not found', 404)
 

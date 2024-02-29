@@ -1,12 +1,8 @@
+from typing import Any
 from datetime import datetime
 from pytz import utc
 from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, UUID4
-
-'''
-Custom list type for declaring events
-'''
-EventList = list[str]
 
 # Request and Response Classes for input/output validation #
 
@@ -51,8 +47,8 @@ class BaseResponse(BaseModel):
 
 class BackgroundTaskResponse(BaseResponse):
     '''
-    Response model returned to an API request that results in a background
-    task being spawned. E.g. `predict`. The response returns immediately and
+    Response model returned to an API request that results in a background task
+    being spawned. E.g. `/api/v1/predict`, the response returns immediately and
     queues a webhook reponse as a callback once the process has completed.
     '''
     status: int = 200
@@ -77,15 +73,15 @@ class ListTypeResponse(BaseResponse):
     data: list[str]
 
 
-class TemplateResponse[T](BaseResponse):
+class TemplateResponse(BaseResponse):
     '''
     Container type for template responses from Prediction models. Note: uses
     "template" rather than "schema" to avoid prop name conflicts.
     '''
     model_config = ConfigDict(extra='forbid')  # schema should be fixed
     name: str
-    version: str
-    properties: T  # dict[str, Any]
-    events: EventList = []
-    returns: BackgroundTaskResponse
+    version: str = '1'
+    accepts: dict[str, Any]  # supply Json in your subclass
+    events: list[str]
+    returns: dict[str, Any]  # Json of BackgroundTaskResponse
     notes: str = ''
