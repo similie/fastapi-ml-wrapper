@@ -1,6 +1,7 @@
 import abc
 from typing import Any
 from ..interfaces.ReqRes import BasePostRequest, WebhookRequest, WebhookResponse
+from ..interfaces.ReqRes import TemplateResponse, BackgroundTaskResponse
 
 
 class BasePredictor(abc.ABC):
@@ -28,6 +29,7 @@ class BasePredictor(abc.ABC):
             url = req.callbackUrl
             url = url + ''
             # TODO: actual POST request
+            # TODO: store responses and remove webhook after [some - 3,5?] 500 response errors
 
     async def sendWebhookIfNeeded(self, forEventNamed: str, res: WebhookResponse):
         # TODO: manage '*' event names
@@ -36,19 +38,16 @@ class BasePredictor(abc.ABC):
                 if eventName == forEventNamed:
                     await self.sendWebhook(webhook, res)
 
-    # TODO: Type def for template type, implementation in rainfall and test
-    async def template(self) -> dict[str, Any]:
-        return {
-            'name': self.__class__.__name__,
-            'version': 1,
-            'properties': {},
-            'events': [],
-            'returns': {
-                'type': 'object',
-                'properties': {},
-                'notes': 'Returns array of arrays containing prediction output'
-            }
-        }
+    async def template(self) -> TemplateResponse:
+        result = TemplateResponse(
+            name=self.__class__.__name__,
+            version='1',
+            properties={},
+            events=[],
+            returns=BackgroundTaskResponse(),
+            notes=''
+        )
+        return result
 
     @abc.abstractmethod
     async def predict(self, payload: Any) -> dict[str, Any]:

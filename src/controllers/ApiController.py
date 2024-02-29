@@ -5,7 +5,7 @@ from ..prediction_models.AllModelsService import getModelNames, modelForPayload
 # Request structs
 from ..interfaces.ReqRes import BasePostRequest
 # Response structs
-from ..interfaces.ReqRes import BaseResponse, ListTypeResponse, TemplateRespose
+from ..interfaces.ReqRes import BaseResponse, ListTypeResponse
 
 # set up cached config
 config = getConfig()
@@ -46,8 +46,7 @@ async def model_schema(model_name: str) -> BaseResponse:
     '''
     model = modelForPayload(BasePostRequest(modelName=model_name))
     if model is not None:
-        modelSchema = await model.template()
-        result = TemplateRespose(template=modelSchema)
+        result = await model.template()
         return result
 
     return Response('Resource not found', 404)

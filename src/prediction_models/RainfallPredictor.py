@@ -13,12 +13,14 @@ class RainfallPredictor(BasePredictor):
     def __init__(self, payload) -> None:
         super().__init__(payload)
 
-    async def template(self) -> dict[str, Any]:
-        await super().template()
-        result: dict[str, Any] = {}
-        result['foo'] = 'bar'
+    async def template(self):
+        t = await super().template()
+        t.notes = '''
+        Input properties are weather data, post requests return immediately
+         and call back results via the supplied webhook request
+        '''
 
-        return result
+        return t
 
     async def __loadCubeJson(self, payload: CubePredictionPostRequest):
         stations = payload.stations if payload.stations is not None else []

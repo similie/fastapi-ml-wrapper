@@ -1,7 +1,12 @@
 from datetime import datetime
-from typing import Any
+from pytz import utc
 from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, UUID4
+
+'''
+Custom list type for declaring events
+'''
+EventList = list[str]
 
 # Request and Response Classes for input/output validation #
 
@@ -40,18 +45,27 @@ class BaseResponse(BaseModel):
     model_config = ConfigDict(extra='allow')
 
     timestamp: int = Field(
-        default_factory=lambda: int(datetime.now().timestamp() * 1000)
+        default_factory=lambda: int(datetime.now(utc).timestamp() * 1000)
     )
 
 
-class WebhookResponse(BaseResponse):
+class BackgroundTaskResponse(BaseResponse):
     '''
-    Response model POSTED to a callback webhook. Contains a unix millis
-    timestamp (from BaseReponse) status code, event name and message
+    Response model returned to an API request that results in a background
+    task being spawned. E.g. `predict`. The response returns immediately and
+    queues a webhook reponse as a callback once the process has completed.
     '''
     status: int = 200
-    eventName: str = '*'
     message: str = ''
+
+
+class WebhookResponse(BackgroundTaskResponse):
+    '''
+    Response model POSTED to a callback webhook. Contains a unix millis
+    timestamp from `BaseReponse`, a status code and message from
+    `BackgroundTaskResponse` and adds a single property for the event name
+    '''
+    eventName: str
 
 
 class ListTypeResponse(BaseResponse):
@@ -63,21 +77,15 @@ class ListTypeResponse(BaseResponse):
     data: list[str]
 
 
-class TemplateRespose(BaseResponse):
+class TemplateResponse[T](BaseResponse):
     '''
     Container type for template responses from Prediction models. Note: uses
     "template" rather than "schema" to avoid prop name conflicts.
     '''
-    model_config = ConfigDict()
-    template: dict[str, Any]
-
-# TODO: name, version, events, schema. E.g:
-# class BaseTemplate[T](BaseModel):
-#   '''
-#   The Filter Template describes the general schema for a class
-#   '''
-#   name: str
-#   version: str
-#   schema: T
-#   events: EventList | None = None
-#   returns: FilterResponse
+    model_config = ConfigDict(extra='forbid')  # schema should be fixed
+    name: str
+    version: str
+    properties: T  # dict[str, Any]
+    events: EventList = []
+    returns: BackgroundTaskResponse
+    notes: str = ''
