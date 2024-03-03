@@ -1,7 +1,11 @@
-from fastapi import APIRouter, Response  # , Request, BackgroundTasks
-
+from time import sleep
+from fastapi import APIRouter, Response, BackgroundTasks
 from app.config import getConfig
-from ..prediction_models.AllModelsService import getModelNames, modelForPayload
+from ..prediction_models.AllModelsService import (
+    getModelNames,
+    ensureValidModelName,
+    modelForPayload
+)
 # Request structs
 from ..interfaces.ReqRes import BasePostRequest
 # Response structs
@@ -55,7 +59,7 @@ async def model_schema(model_name: str) -> BaseResponse:
 
 # TODO: Endpoints for: inference, fine-tuning & training
 @routes.post('/predict/{model_name}')
-async def run_model_inference(model_name: str, req: BasePostRequest):
+async def run_model_inference(model_name: str, req: BasePostRequest, taskManager: BackgroundTasks):
     '''
     Run inference on the specified model. This method returns immediately and
     runs the task in a background thread. To receive progress reports, you should
@@ -63,10 +67,12 @@ async def run_model_inference(model_name: str, req: BasePostRequest):
 
     See the model template for details of the expected body format.
     '''
-    model = modelForPayload(BasePostRequest(modelName=model_name))
-    if model is not None:
-        res = await model.predict(req)
-        return res
+    postReq = ensureValidModelName(model_name, req)
+    if postReq is not None:
+        model = modelForPayload(postReq)
+        if model is not None:
+            res = await model.predict(postReq, taskManager)
+            return res
 
     return Response('Resource not found', 404)
 

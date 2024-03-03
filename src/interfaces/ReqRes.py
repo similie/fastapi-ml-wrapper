@@ -13,7 +13,7 @@ class BasePostRequest(BaseModel):
     Base POST Request model for generic post processing of model payloads
     by model name.
     '''
-    model_config = ConfigDict(extra='ignore')
+    model_config = ConfigDict(extra='allow')
 
     modelName: str | None = None
 
@@ -59,9 +59,13 @@ class WebhookResponse(BackgroundTaskResponse):
     '''
     Response model POSTED to a callback webhook. Contains a unix millis
     timestamp from `BaseReponse`, a status code and message from
-    `BackgroundTaskResponse` and adds a single property for the event name
+    `BackgroundTaskResponse` and adds properties for the event name and
+    an optional for the data if the event returns data. The originating
+    WebhookRequest->CallbackToken should be added to the response headers
+    before executing the callback request.
     '''
     eventName: str
+    data: list[Any] | None = None
 
 
 class ListTypeResponse(BaseResponse):
@@ -83,5 +87,5 @@ class TemplateResponse(BaseResponse):
     version: str = '1'
     accepts: dict[str, Any]  # supply Json in your subclass
     events: list[str]
-    returns: dict[str, Any]  # Json of BackgroundTaskResponse
+    returns: dict[str, Any]  # Json of BackgroundTaskResponse (subclass)
     notes: str = ''

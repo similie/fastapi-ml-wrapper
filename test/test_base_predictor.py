@@ -43,7 +43,6 @@ async def test_predictor_template():
     assert t is not None
     assert t.name == 'ATestPredictor'
     assert t.notes == 'test predictor schema'
-    # assert t.properties.fieldOne == 'f1'
 
 
 @pytest.mark.asyncio

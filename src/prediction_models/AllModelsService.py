@@ -38,6 +38,18 @@ def getModelNames():
     return list(_allModels.keys())
 
 
+def ensureValidModelName(modelName: str, payload: BasePostRequest) -> BasePostRequest | None:
+    '''
+    Ensures that the modelName is present in the payload and is also on of the
+    available models in the container. Returns a model if the name was valid or
+    None otherwise.
+    '''
+    if (any(modelName in x for x in _allModels)):
+        payload.modelName = modelName if payload.modelName is None else payload.modelName
+    else:
+        return None
+
+
 def modelForPayload(payload: BasePostRequest):
     '''
     Factory function to instantiate a predictor class from payload.model

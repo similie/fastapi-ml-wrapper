@@ -20,7 +20,7 @@ class CubePredictionPostRequest(BasePostRequest):
 class ForecastPredictionPostRequest(BasePostRequest):
     '''
     POST Request model representing an inference request from a weather
-    forcast. Data class contains an optional webhook and a list of:
+    forecast. Data class contains an optional webhook and a list of:
     [weather parameters, station, datetime & hour] objects
     '''
     data: list[AllWeatherQueryMeasuresResponse]
