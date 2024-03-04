@@ -20,7 +20,7 @@ class ATestPredictor(BasePredictor):
         t = await super().template()
         t.notes = 'test predictor schema'
         t.events = ['onTest']
-        t.accepts = ATestTemplateProps.model_json_schema()
+        t.accepts = ATestTemplateProps()
         return t
 
     async def fineTune(self, payload: Any):

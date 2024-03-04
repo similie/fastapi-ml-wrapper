@@ -55,17 +55,23 @@ class BackgroundTaskResponse(BaseResponse):
     message: str = ''
 
 
-class WebhookResponse(BackgroundTaskResponse):
+class DataTaskResponse(BackgroundTaskResponse):
     '''
-    Response model POSTED to a callback webhook. Contains a unix millis
-    timestamp from `BaseReponse`, a status code and message from
-    `BackgroundTaskResponse` and adds properties for the event name and
-    an optional for the data if the event returns data. The originating
-    WebhookRequest->CallbackToken should be added to the response headers
-    before executing the callback request.
+    Response model returned to an inline (inference) call that shold return
+    an array of data. Subclasses should override the list type.
+    '''
+    data: list[Any] | None = None
+
+
+class WebhookResponse(DataTaskResponse):
+    '''
+    Response model POSTED to a callback webhook. Contains a unix millis timestamp
+    from `BaseReponse`, a status code and message from `BackgroundTaskResponse`
+    an optional for the data array from `dataTaskResponse`, if the event returns data
+    and adds a property for the event name. The originating WebhookRequest->CallbackToken
+    should be added to the response headers before executing the callback request.
     '''
     eventName: str
-    data: list[Any] | None = None
 
 
 class ListTypeResponse(BaseResponse):

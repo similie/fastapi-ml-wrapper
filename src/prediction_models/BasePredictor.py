@@ -19,7 +19,7 @@ class BasePredictor(abc.ABC):
     webhooks: list[WebhookRequest]
 
     def __init__(self, payload) -> None:
-        self.payload = payload        
+        self.payload = payload
         self.webhooks = []
 
     def setWebhook(self, value: WebhookRequest):
@@ -42,7 +42,7 @@ class BasePredictor(abc.ABC):
                     response = await client.post(url, json=jsonBody, headers=headers)
                     result = response.status_code
 
-        except:
+        except:  # noqa E722 TODO: find correct exception class
             result = 501
 
         return result
@@ -61,7 +61,7 @@ class BasePredictor(abc.ABC):
                     hookToSend = webhook
 
         statusCode = await self.sendWebhook(hookToSend, res)
-        return statusCode                    
+        return statusCode
 
     async def template(self) -> TemplateResponse:
         result = TemplateResponse(
@@ -73,7 +73,7 @@ class BasePredictor(abc.ABC):
         return result
 
     @abc.abstractmethod
-    async def predict(self, payload: Any, taskManager: BackgroundTasks | None) -> dict[str, Any]:
+    async def predict(self, payload: Any, taskManager: BackgroundTasks | None = None) -> dict[str, Any]:
         '''
         Runs inference with the selected model. If the payload contains a
         webhook, the response will be send immediately with the webhook uuid
