@@ -1,4 +1,5 @@
 from typing import Any
+from fastapi import BackgroundTasks
 from pydantic import BaseModel
 from .BasePredictor import BasePredictor
 from ..interfaces.ReqRes import TemplateResponse
@@ -20,7 +21,7 @@ class ATestPredictor(BasePredictor):
         t = await super().template()
         t.notes = 'test predictor schema'
         t.events = ['onTest']
-        t.accepts = ATestTemplateProps()
+        t.accepts = ATestTemplateProps.model_json_schema()
         return t
 
     async def fineTune(self, payload: Any):
@@ -32,7 +33,7 @@ class ATestPredictor(BasePredictor):
         }
         return result
 
-    async def predict(self, payload: Any):
+    async def predict(self, payload: Any, taskManager: BackgroundTasks | None = None):
         await super().predict(payload)
         result = {
             'result': True,

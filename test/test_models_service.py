@@ -1,6 +1,10 @@
 import pytest
 from src.interfaces.ReqRes import BasePostRequest
-from src.prediction_models.AllModelsService import getModelNames, modelForPayload
+from src.prediction_models.AllModelsService import (
+    getModelNames,
+    modelForPayload,
+    ensureValidModelName
+)
 
 
 def test_get_all_model_names():
@@ -27,3 +31,29 @@ def test_model_for_unknown_payload_key():
         model = modelForPayload({'unknown': 'test'})  # noqa: F841
 
     assert "Error" in str(exceptionInfo.typename)
+
+
+def test_ensure_valid_model_name():
+    req = BasePostRequest(modelName='test')
+    payload = ensureValidModelName('test', req)
+    assert payload is not None
+
+
+def test_ensure_valid_model_name_2():
+    req = BasePostRequest(modelName='not-valid')
+    payload = ensureValidModelName('test', req)
+    assert payload is not None
+    assert payload.modelName == 'test'
+
+
+def test_ensure_valid_model_name_3():
+    req = BasePostRequest(modelName='test')
+    payload = ensureValidModelName('not-valid', req)
+    assert payload is not None
+    assert payload.modelName == 'test'
+
+
+def test_ensure_valid_model_name_3():
+    req = BasePostRequest(modelName='not-valid')
+    payload = ensureValidModelName('not-valid', req)
+    assert payload is None

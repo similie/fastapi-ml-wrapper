@@ -40,12 +40,15 @@ def getModelNames():
 
 def ensureValidModelName(modelName: str, payload: BasePostRequest) -> BasePostRequest | None:
     '''
-    Ensures that the modelName is present in the payload and is also on of the
+    Ensures that the modelName is present in the payload and is also one of the
     available models in the container. Returns a model if the name was valid or
     None otherwise.
     '''
-    if (any(modelName in x for x in _allModels)):
-        payload.modelName = modelName if payload.modelName is None else payload.modelName
+    if (_allModels.__contains__(payload.modelName)):
+        return payload
+    elif (_allModels.__contains__(modelName)):
+        payload.modelName = modelName
+        return payload
     else:
         return None
 
