@@ -16,25 +16,8 @@ CUBE_PG_USER=''
 CUBE_PG_PASS=''
 
 
-### [ML Models config section]
-## LSTM Config:
-lstm_name='tabularasa'
-lstm_n_features=7
-lstm_hidden_size=128
-lstm_sequence_length=12
-lstm_batch_size=1
-lstm_num_layers=2
-lstm_dropout=0.5
-lstm_prediction_window=168
-
-## trainer_config:
-trainer_precision=64
-trainer_accelerator='cpu'
-trainer_default_root_dir='results'
-trainer_max_epochs=40
-trainer_log_every_n_steps=1  
-
-## experiment_config:
+# [ML Models config section]
+# experiment_config:
 experiment_name='experiment-1'
 experiment_train_path='./data/combined.csv'
 experiment_val_path='./data/combined.csv'
@@ -44,3 +27,22 @@ experiment_weight_decay=1e-4
 experiment_lr=0.02
 experiment_batch_size=1
 experiment_sequence_length=12
+experiment_prediction_window=72
+experiment_target_col='sum_precipitation'
+experiment_groupby_col='station'
+
+# LSTM Config:
+lstm_name='tabularasa'
+lstm_n_features=6
+lstm_hidden_size=128
+lstm_sequence_length=12
+lstm_batch_size=1
+lstm_num_layers=2
+lstm_dropout=0.5
+
+# trainer_config:
+trainer_precision=64
+trainer_accelerator='gpu'
+trainer_default_root_dir='results'
+trainer_max_epochs=40
+trainer_log_every_n_steps=1  
