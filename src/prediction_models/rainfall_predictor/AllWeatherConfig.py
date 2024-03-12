@@ -18,13 +18,16 @@ class ExperimentConfig(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='experiment_')
     name: str
     train_path: str
-    val_path: str
-    pred_path: str
+    # val_path: str
+    # pred_path: str
     check_path: str
     lr: float
     weight_decay: float
-    batch_size: int
-    sequence_length: int
+    target_col: str
+    groupby_col: str
+    prediction_window: int = 168
+    batch_size: int = 1
+    sequence_length: int = 12
 
 
 class LstmConfig(BaseSettings):
@@ -39,7 +42,7 @@ class LstmConfig(BaseSettings):
     batch_size: int = 1
     num_layers: int = 2
     dropout: float = 0.5
-    prediction_window: int = 168
+    check_path: str = ''
 
 
 class TrainerConfig(BaseSettings):

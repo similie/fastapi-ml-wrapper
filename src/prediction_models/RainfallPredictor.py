@@ -1,10 +1,12 @@
 from typing import Any
+import json
 from fastapi import BackgroundTasks
 from pydantic import ValidationError
+import pandas as pd
 from .BasePredictor import BasePredictor
-from ..interfaces.ReqRes import TemplateResponse
+from ..interfaces.ReqRes import TemplateResponse, DataTaskResponse
 # (BackgroundTaskResponse, WebhookRequest, WebhookResponse)
-from .rainfall_predictor.DataLoader import loadJson
+from .rainfall_predictor.AllWeatherCubeLoader import loadJson
 from .rainfall_predictor.PredictionPostRequests import (
     CubePredictionPostRequest,
     ForecastPredictionPostRequest
@@ -13,6 +15,7 @@ from .rainfall_predictor.PredictionPostResponse import ForecastPredictionPostRes
 from .rainfall_predictor.AllWeatherCubeRequest import AllWeatherQueryMeasures
 from .rainfall_predictor.AllWeatherCubeResponse import AllWeatherQueryMeasuresResponse
 
+from .rainfall_predictor.project.predict import testPredict
 
 class RainfallPredictor(BasePredictor):
     '''
@@ -91,7 +94,7 @@ class RainfallPredictor(BasePredictor):
             ):
         payloadModel = self.guardPredictionPayload(payload)
         # TODO branch here for inference inline (or in background if webhook supplied)
-        # For straight infernce, return a ForecastPredictionPostResponse. If a webhook
+        # For straight inference, return a ForecastPredictionPostResponse. If a webhook
         # was supplied, return a BackgroundTaskResponse and add result data to the
         # WebhookResponse instance, returned via `sendWebhookIfNeeded`
 
@@ -103,14 +106,27 @@ class RainfallPredictor(BasePredictor):
             data = payloadModel.data
         # reqData is now either the input weather forcast or station measurements
 
+        # TODO: model_dump override to remove avg_ and sum_ from field names
+        pdData = [item.model_dump() for item in data]
+        dataFrame = pd.DataFrame(pdData)
+        print(f'Pandas dataframe with {len(dataFrame.columns)} cols')
         # pass [data] into model for inference
-        # HERE:
+        predictions = testPredict()
 
-        return ForecastPredictionPostResponse(
+        print(f'Rainfall prediction -> predict done: {predictions[0]['data'][0]}')
+
+        return DataTaskResponse(
             status=200,
-            message=f'Inference in {payload.__class__.__name__},count:{len(data)}',
-            data=data
-        ).model_dump()  # base-class return type is dict[str, any]
+            message=f'Inference in {payload.__class__.__name__},count:{len(predictions)}',
+            data=predictions
+        ).model_dump()
+
+
+        # return ForecastPredictionPostResponse(
+        #     status=200,
+        #     message=f'Inference in {payload.__class__.__name__},count:{len(data)}',
+        #     data=data
+        # ).model_dump()  # base-class return type is dict[str, any]
 
     async def train(self, payload: Any):
         return super().train(payload)

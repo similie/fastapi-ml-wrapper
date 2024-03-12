@@ -1,6 +1,9 @@
 from typing import Any
 import pytest
-from src.interfaces.ReqRes import BasePostRequest
+from src.interfaces.ReqRes import (
+    BasePostRequest,
+    WebhookRequest
+)
 from src.prediction_models.TestPredictor import ATestPredictor
 
 
@@ -73,3 +76,19 @@ async def test_predictor_train():
     assert result is not None
     assert result['count'] == 0
     assert result['payload']['f1'] is not None
+
+
+def test_add_webhook():
+    predictor = MockTestPredictor()
+    hook = WebhookRequest(
+        modelName='test',
+        callbackUrl='http://example.com/callback',
+        callbackAuthToken='e572b49a-f075-4c74-9be7-f3b5eb7ed33c',
+        eventNames=['onTest']
+    )
+    assert hook.id is not None
+    assert predictor.webhooks is not None
+    assert len(predictor.webhooks) == 0
+
+    predictor.setWebhook(hook)
+    assert len(predictor.webhooks) == 1

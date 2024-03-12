@@ -57,7 +57,7 @@ async def model_schema(model_name: str) -> BaseResponse:
     return Response('Resource not found', 404)
 
 
-# TODO: Endpoints for: inference, fine-tuning & training
+# TODO: Endpoints for fine-tuning & training
 @routes.post('/predict/{model_name}')
 async def run_model_inference(model_name: str, req: BasePostRequest, taskManager: BackgroundTasks):
     '''
