@@ -36,7 +36,7 @@ agg_dict = {
 field_list = [
     "date",
     "station",
-    "sum_precipitation",
+    "precipitation",
     "temperature",
     "humidity",
     "pressure",

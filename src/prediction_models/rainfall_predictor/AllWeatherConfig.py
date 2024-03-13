@@ -65,6 +65,7 @@ class AllWeatherMLConfig(BaseSettings):
     experiment_config: ExperimentConfig = ExperimentConfig()
     lstm_config: LstmConfig = LstmConfig()
     trainer_config: TrainerConfig = TrainerConfig()
+    checkpoint_path: str = 'src/prediction_models/rainfall_predictor/project/checkpoints/'
 
 
 @lru_cache
