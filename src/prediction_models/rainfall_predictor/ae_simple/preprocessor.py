@@ -225,6 +225,7 @@ def load_data_json(strJsonPath: str):
         #     data.append(lst)
 
     df = pd.DataFrame(data=data, columns=cols)
+        "date",
     # df = duplicate_datetime(df.copy())        
     # df = set_dt_index(df.copy())
     # # df = df[(df.index.year.isin([2022, 2023]))].copy()
