@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import json
 from sklearn.pipeline import make_pipeline
 from sklearn.compose import make_column_selector, make_column_transformer
 from sklearn.preprocessing import QuantileTransformer, StandardScaler
@@ -216,18 +217,20 @@ def load_data_json(strJsonPath: str):
     data = []
 
     with open(strJsonPath, encoding='utf-8') as f:
-        lines_number = sum(1 for _ in f)
-        for line in tqdm(f, desc="Loading Json...", total=lines_number*10):
-            doc = json.loads(line)
-            lst = [doc[col] for col in cols]
-            data.append(lst)
+        data = json.load(f)
+        # lines_number = sum(1 for _ in f)
+        # for line in tqdm(f, desc="Loading Json...", total=lines_number*10):
+        #     doc = json.loads(line)
+        #     lst = [doc[col] for col in cols]
+        #     data.append(lst)
 
     df = pd.DataFrame(data=data, columns=cols)
-    df = duplicate_datetime(df.copy())        
-    df = set_dt_index(df.copy())
-    # df = df[(df.index.year.isin([2022, 2023]))].copy()
-    df = negatives(df.copy())
-    # df = iso_pipeline(df.dropna(), pipeline)
-    df = sample_interp(df.copy(), agg_dict=agg_dict)
-    df = df.dropna()
-    return {s: _df.drop('station', axis=1) for s, _df in df.groupby('station')}, df.drop('station', axis=1).columns.to_list()
+    # df = duplicate_datetime(df.copy())        
+    # df = set_dt_index(df.copy())
+    # # df = df[(df.index.year.isin([2022, 2023]))].copy()
+    # df = negatives(df.copy())
+    # # df = iso_pipeline(df.dropna(), pipeline)
+    # df = sample_interp(df.copy(), agg_dict=agg_dict)
+    #df = df.dropna()
+    # return {s: _df.drop('station', axis=1) for s, _df in df.groupby('station')}, df.drop('station', axis=1).columns.to_list()
+    return df

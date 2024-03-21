@@ -5,11 +5,11 @@ import torch
 from datetime import timedelta
 from pytz import UTC
 import pandas as pd
-from ..AllWeatherConfig import getAllWeatherMLConfig
-from ..PredictionPostResponse import (
-    RainfallPrediction,
-    StationRainfallPrediction,
-)
+# from ..AllWeatherConfig import getAllWeatherMLConfig
+# from ..PredictionPostResponse import (
+#     RainfallPrediction,
+#     StationRainfallPrediction,
+# )
 from typing import Any, Sequence, Optional, Tuple, Iterator, Dict, Callable, Union
 # model imports
 from layers.model import Autoencoder
@@ -27,9 +27,7 @@ except ModuleNotFoundError:
 CHECKPOINTPATH = os.path.join(os.getcwd(), './results')
 
 def _predict(
-        startDateUTC: pd.Timestamp,
         data: pd.DataFrame,
-        predictTimeOffsetDays: int = 3,
         latent_dim = 64,
         ):
     """
@@ -38,14 +36,14 @@ def _predict(
         you supply, the system will return 6 times the length up to 
         a limit of 12 hours, or 6 * 12 = 72 hours / 3 days.
     """
-    config = getAllWeatherMLConfig()
+    # config = getAllWeatherMLConfig()
     try:
-        modelWeightsPath = os.path.join(CHECKPOINTPATH + f"/AE_model{latent_dim}/version_0/checkpoints/, os.listdir(os.path.join(CHECKPOINTPATH, f"AE_model{latent_dim}/version_0/checkpoints/"))[0])
+        modelWeightsPath = os.path.join(CHECKPOINTPATH + f"/AE_model{latent_dim}/version_0/checkpoints/", os.listdir(os.path.join(CHECKPOINTPATH, f"AE_model{latent_dim}/version_0/checkpoints/"))[0])
     except FileNotFoundError:
         print("Model weights not found...")
     checkPointPath = CHECKPOINTPATH
 
-    dateCounter = (startDateUTC + timedelta(days=predictTimeOffsetDays)).timestamp()
+    # dateCounter = (startDateUTC + timedelta(days=predictTimeOffsetDays)).timestamp()
     dm = get_dm(data_dir=data) 
     data_loader = dm.predict_combined_loader()
     

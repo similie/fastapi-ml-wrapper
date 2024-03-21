@@ -1,21 +1,12 @@
-
-import os
 from os import path, getcwd
-import math
-import torch
-from datetime import timedelta
-from pytz import UTC
-import pandas as pd
-from ..AllWeatherConfig import getAllWeatherMLConfig
-from ..PredictionPostResponse import (
-    RainfallPrediction,
-    StationRainfallPrediction,
-)
-from typing import Any, Sequence, Optional, Tuple, Iterator, Dict, Callable, Union
-# model imports
-from layers.model import Autoencoder
-from mutils import generate_datetime_index
-from predict import _predict, generate_predictions 
+from preprocessor import load_data_json
+from predict import _predict
 
+json_path = path.join(getcwd(), '../project/checkpoints/test_cube.json') 
 
-predictions = _predict(startDate, data)
+def check_prediction_inputs(json_path):
+    data = load_data_json(json_path)
+    return data
+    
+data = check_prediction_inputs(json_path)
+predictions = _predict(data)
