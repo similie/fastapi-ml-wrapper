@@ -6,7 +6,7 @@ import numpy as np
 from os import path, getcwd
 from typing import Any, Sequence, Optional, Tuple, Iterator, Dict, Callable, Union
 from mutils import collate_batch, generate_datetime_index
-from preprocessor import load_data_csv, load_data_json
+from preprocessor import load_data_csv, load_data_json, load_dataframe
 from pytorch_lightning.utilities import CombinedLoader
 
 # transforms
@@ -46,14 +46,14 @@ class SequenceDataset(Dataset):
     
 class get_dm():
     def __init__(self,
-                 data_dir: str,
+                 data_dir: pd.DataFrame,
                  batch_size: int = 1,
                  frames = None, #dictionary
                  features: list = [],
                  transforms=_processor):
         self.data_dir = data_dir
         self.batch_size = batch_size
-        self.frames, self.features = load_data_json(self.data_dir)
+        self.frames, self.features = load_dataframe(self.data_dir) 
         self.transforms = transforms
         self.transforms = self.processor_fit(transforms)
         self.frames = { station: pd.DataFrame(self.transforms.transform(_df),

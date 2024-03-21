@@ -175,6 +175,27 @@ def negatives(X: pd.DataFrame) -> pd.DataFrame:
     X[mask] = np.nan
     return X
 
+def load_dataframe(df: pd.DataFrame):
+    
+    cols = [
+        "date",
+        "station",
+        "precipitation",
+        "temperature",
+        "humidity",
+        "pressure",
+        "wind_speed",
+        "wind_direction",
+        "solar",
+    ]
+    df = df[cols]
+    df = duplicate_datetime(df.copy())        
+    df = set_dt_index(df.copy())
+    # df = df[(df.index.year.isin([2022, 2023]))].copy()
+    df = negatives(df.copy())
+    # df = iso_pipeline(df.dropna(), pipeline)
+    return {s: _df.drop('station', axis=1) for s, _df in df.groupby('station')}, df.drop('station', axis=1).columns.to_list()
+
 def load_data_json(strJsonPath: str):
     """
         Load json and set column names and order

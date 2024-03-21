@@ -28,7 +28,7 @@ CHECKPOINTPATH = os.path.join(os.getcwd(), './results')
 
 def _predict(
         startDateUTC: pd.Timestamp,
-        data: str,
+        data: pd.DataFrame,
         predictTimeOffsetDays: int = 3,
         latent_dim = 64,
         ):
