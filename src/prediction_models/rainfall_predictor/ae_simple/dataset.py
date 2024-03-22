@@ -69,12 +69,20 @@ class get_dm():
     def process_preds(self, plist):
         plist = [l[-12:][0].squeeze(0) for l in plist]
         indexes = [generate_datetime_index(v.index.max(), periods=l.size(0)) for l, v in zip(plist, self.frames.values())]
-        plist = [pd.DataFrame(self.transforms.inverse_transform(p.numpy()), index=i, columns=self.features) for i, p in zip(indexes, plist)]
+        plist = [pd.DataFrame(self.dummy_col(p.numpy()), index=i, columns=self.features) for i, p in zip(indexes, plist)]
         stations = list(self.frames.keys())
         preds = {}
         for s, p in zip(stations, plist):
             preds[s] = p
         return preds
+
+    def dummy_col(self, arr: np.array):
+        if arr.shape[1] == 7:
+            return self.transforms.inverse_transform(arr)
+        else:
+            pad = np.zeros((12,6))
+            temp = np.hstack((arr, pad))
+            return self.transforms.inverse_transform(temp)[:,0,None]
     
     def gen_sequence_datasets(self, frames):
         sequence_datasets = {}

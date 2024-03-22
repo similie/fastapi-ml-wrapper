@@ -12,7 +12,7 @@ import pandas as pd
 # )
 from typing import Any, Sequence, Optional, Tuple, Iterator, Dict, Callable, Union
 # model imports
-from layers.model import Autoencoder
+from layers.model import Autoencoder, Forecaster
 from mutils import generate_datetime_index
 from dataset import get_dm 
 # PyTorch Lightning
@@ -20,9 +20,6 @@ try:
     import pytorch_lightning as pl
 except ModuleNotFoundError:
   print("Install lightning...")
-
-# Features: (set in preprocessor.py in the load_data_json function)
-# ['precipitation', 'temperature', 'humidity', 'pressure', 'wind_speed', 'wind_direction', 'solar']
 
 CHECKPOINTPATH = os.path.join(os.getcwd(), './results')
 
@@ -38,15 +35,14 @@ def _predict(
     """
     # config = getAllWeatherMLConfig()
     try:
-        modelWeightsPath = os.path.join(CHECKPOINTPATH + f"/AE_model{latent_dim}/version_0/checkpoints/", os.listdir(os.path.join(CHECKPOINTPATH, f"AE_model{latent_dim}/version_0/checkpoints/"))[0])
+        modelWeightsPath = os.path.join(CHECKPOINTPATH + f"/FC_model{latent_dim}/version_0/checkpoints/", os.listdir(os.path.join(CHECKPOINTPATH, f"FC_model{latent_dim}/version_0/checkpoints/"))[0])
     except FileNotFoundError:
         print("Model weights not found...")
     checkPointPath = CHECKPOINTPATH
 
     # dateCounter = (startDateUTC + timedelta(days=predictTimeOffsetDays)).timestamp()
     dm = get_dm(data_dir=data) 
-    data_loader = dm.predict_combined_loader()
-    
+    # data_loader = dm.predict_combined_loader()
     trainer = pl.Trainer(default_root_dir=checkPointPath,
                             enable_checkpointing=False,
                             accelerator="cpu",
@@ -54,7 +50,8 @@ def _predict(
     
     if os.path.isfile(modelWeightsPath):
         print("Found pretrained model, loading...")
-        model = Autoencoder.load_from_checkpoint(modelWeightsPath)
+        model = Forecaster.load_from_checkpoint(modelWeightsPath)
+        model.freeze()
     else:
         print("Pretrained model not found...")
     # Feed predictions into dataframes with an extended _df.index

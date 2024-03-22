@@ -159,3 +159,75 @@ class Autoencoder(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
         return self(batch[0].unsqueeze(0))        
+
+class Forecaster(pl.LightningModule):
+    def __init__(self,
+                 input_size : int,
+                 latent_dim : int,
+                 dropout : float,
+                 ae_checkpoint_path : str,
+                 act_fn : object = nn.GELU,
+                 autoencoder_class : object = Autoencoder):
+        """
+            Inputs:
+                - input_size : numbers of features
+                            + latent representation
+                - latent_dim : hidden layer size
+                - dropout : layer normalization
+                - act_fn : activation function 
+        """
+        super().__init__()
+        # Saving hyperparameters of autoencoder
+        self.latent_dim = latent_dim
+        self.save_hyperparameters()
+        self.autoencoder = autoencoder_class.load_from_checkpoint(ae_checkpoint_path)
+        self.autoencoder.freeze()
+        self.lstm = nn.LSTM(input_size=self.latent_dim+7, 
+            hidden_size=latent_dim, 
+            num_layers=4,
+            dropout=dropout,
+            bidirectional=False, 
+            batch_first=True)
+        act_fn()
+        self.linear = nn.Linear(self.latent_dim, 16)
+        act_fn()
+        self.linear_out = nn.Linear(16, 7)
+        
+    def forward(self, x):
+        # Initialize hidden state with zeros
+        h0 = torch.empty(4, x.size(0), self.latent_dim)
+        nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('relu'))
+        # Initialize cell state
+        c0 = torch.empty(4, x.size(0), self.latent_dim)
+        nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('relu'))
+        y = self.autoencoder.encoder.lstm(x)
+        x = torch.cat((x, y[0]), dim=-1)
+        x, (h1, c1) = self.lstm(x, (h0, c0))
+        x = self.linear(x)
+        return self.linear_out(x)
+
+    def configure_optimizers(self):
+        return optim.AdamW(self.parameters(), lr=1e-3, weight_decay=0.01)
+    
+    def training_step(self, batch):
+        inputs, target = batch
+        loss = self.loss_function(inputs, target)
+        self.log('train_loss', loss)
+
+    def validation_step(self, batch, batch_idx, dataloader_idx=0):
+        inputs, target = batch
+        loss = self.loss_function(inputs, target)
+        self.log('val_loss', loss)
+
+    def test_step(self, batch, batch_idx, dataloader_idx=0):
+        inputs, target = batch
+        loss = self.loss_function(inputs, target)
+        self.log('test_loss', loss)
+
+    def predict_step(self, batch, batch_idx, dataloader_idx=0):
+        inputs, target = batch
+        return self(inputs.unsqueeze(0))
+
+    def loss_function(self, inputs, target):
+        loss = F.mse_loss(inputs, target)
+        return loss
