@@ -6,7 +6,7 @@ import numpy as np
 from os import path, getcwd
 from typing import Any, Sequence, Optional, Tuple, Iterator, Dict, Callable, Union
 from mutils import collate_batch, generate_datetime_index
-from preprocessor import load_data_csv, load_data_json, load_dataframe
+from preprocessor import load_data_csv
 from pytorch_lightning.utilities import CombinedLoader
 
 # transforms
@@ -20,7 +20,7 @@ class SequenceDataset(Dataset):
                  dataframe,
                  station_name, 
                  features,
-                 target=None, 
+                 target=['precipitation'], 
                  prediction_window=12,
                  sequence_length=12):
         self.features = features
@@ -46,20 +46,20 @@ class SequenceDataset(Dataset):
     
 class get_dm():
     def __init__(self,
-                 data_dir: pd.DataFrame,
+                 data_dir: str = path.join(getcwd(), '../tabula_rasa/data/combined.csv'),
                  batch_size: int = 1,
                  frames = None, #dictionary
                  features: list = [],
                  transforms=_processor):
         self.data_dir = data_dir
         self.batch_size = batch_size
-        self.frames, self.features = load_dataframe(self.data_dir) 
+        self.frames, self.features = load_data_csv(self.data_dir, pred=None)
         self.transforms = transforms
         self.transforms = self.processor_fit(transforms)
         self.frames = { station: pd.DataFrame(self.transforms.transform(_df),
                                         index=_df.index,
                                         columns=_df.columns) for station, _df in self.frames.items() }
-        self.sequence_datasets = self.gen_sequence_datasets(self.frames)
+        self.sequence_datasets = self.gen_sequence_datasets(self.frames, target=None)
 
     def processor_fit(self, preprocessor):
         for _, _df in self.frames.items():
@@ -69,27 +69,19 @@ class get_dm():
     def process_preds(self, plist):
         plist = [l[-12:][0].squeeze(0) for l in plist]
         indexes = [generate_datetime_index(v.index.max(), periods=l.size(0)) for l, v in zip(plist, self.frames.values())]
-        plist = [pd.DataFrame(self.dummy_col(p.numpy()), index=i, columns=self.features) for i, p in zip(indexes, plist)]
+        plist = [pd.DataFrame(self.transforms.inverse_transform(p.numpy()), index=i, columns=self.features) for i, p in zip(indexes, plist)]
         stations = list(self.frames.keys())
         preds = {}
         for s, p in zip(stations, plist):
             preds[s] = p
         return preds
-
-    def dummy_col(self, arr: np.array):
-        if arr.shape[1] == 7:
-            return self.transforms.inverse_transform(arr)
-        else:
-            pad = np.zeros((12,6))
-            temp = np.hstack((arr, pad))
-            return self.transforms.inverse_transform(temp)[:,0,None]
     
-    def gen_sequence_datasets(self, frames):
+    def gen_sequence_datasets(self, frames, target=None):
         sequence_datasets = {}
         for s, _df in frames.items():
             sequence_datasets[s] = SequenceDataset(_df,
                                                    s,
-                                                   target=self.features,
+                                                   target=['precipitation'],
                                                    features=self.features)
         return sequence_datasets
              
@@ -105,6 +97,7 @@ class get_dm():
         indices1 = np.arange(split, split1)
         val_loader = DataLoader(Subset(dataset, indices1),
                                 batch_size=self.batch_size,
+                                drop_last=True,
                                 shuffle=False, 
                                 collate_fn=collate_batch,
                                 num_workers=2)
@@ -115,6 +108,7 @@ class get_dm():
         indices = np.arange(split, len(dataset))
         test_loader = DataLoader(Subset(dataset, indices),
                                  batch_size=self.batch_size,
+                                 drop_last=True,
                                  shuffle=False,
                                  collate_fn=collate_batch,
                                  num_workers=2)
@@ -151,20 +145,3 @@ class get_dm():
         for s, _df in self.sequence_datasets.items():
             test_loaders[s] = self.gen_test_loader(_df)
         return CombinedLoader(test_loaders, 'sequential')
-    
-    def load_data_json(self, jsonFilePath: str):
-        """
-        load sensor data from the specified file path. Handles duplicate
-        datetimes, sets datetime index.
-        """
-        df = pd.read_json(jsonFilePath)
-        return 
-
-
-    def setJsonData(self, data: pd.DataFrame):
-        '''
-        Adds the pre-loaded Json data from the dataframe into the model
-        '''
-        return self.__refineLoadedJson(data)
-
-
