@@ -53,7 +53,7 @@ class get_dm():
                  transforms=_processor):
         self.data_dir = data_dir
         self.batch_size = batch_size
-        self.frames, self.features = load_data_csv(self.data_dir, pred=None)
+        self.frames, self.features = load_data_csv(self.data_dir, pred=True)
         self.transforms = transforms
         self.transforms = self.processor_fit(transforms)
         self.frames = { station: pd.DataFrame(self.transforms.transform(_df),

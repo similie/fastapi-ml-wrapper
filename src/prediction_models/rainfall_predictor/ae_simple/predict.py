@@ -24,7 +24,7 @@ except ModuleNotFoundError:
 CHECKPOINTPATH = os.path.join(os.getcwd(), './results')
 
 def _predict(
-        data: pd.DataFrame,
+        data: str,
         latent_dim = 64,
         ):
     """
@@ -76,4 +76,3 @@ def generate_predictions(model, trainer, dm, preds=None):
         for s, _df in preds.items():
             result[s] = pd.concat([result[s], _df])
     return result
-    

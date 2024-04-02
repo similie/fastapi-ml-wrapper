@@ -1,10 +1,12 @@
 ## Imports for plotting
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+import matplotlib
+import matplotlib.cm as cm
+import numpy as np
 # %matplotlib inline
 # from IPython.display import set_matplotlib_formats
 # set_matplotlib_formats('svg', 'pdf') # For export
 # from matplotlib.colors import to_rgb
-# import matplotlib
 # matplotlib.rcParams['lines.linewidth'] = 2.0
 
 import torch
@@ -18,22 +20,19 @@ def collate_batch(batch):
     y = pad_sequence(y, batch_first=True)
     return x, y
 
-def plot_ae_loss(model_dict, check_pt_path):
-    latent_dims = sorted([k for k in model_dict])
-    # THIS NEEDS FIXING: test: test_loss/dataloader_idx
-    val_scores = [model_dict[k]["result"]["val"][0]["test_loss"] for k in latent_dims]
-
+def plot_predictions(predictions: dict, data: dict = None):
+    num_stations = len(predictions)
+    colors = iter(cm.rainbow(np.linspace(0, 1, num_stations)))
     fig = plt.figure(figsize=(6,4))
-    plt.plot(latent_dims, val_scores, '--', color="#000", marker="*", markeredgecolor="#000", markerfacecolor="y", markersize=16)
-    plt.xscale("log")
-    plt.xticks(latent_dims, labels=latent_dims)
-    plt.title("Reconstruction error over latent dimensionality", fontsize=12)
-    plt.xlabel("Latent dimensionality")
-    plt.ylabel("Reconstruction error")
+    for station, _df in predictions.items():
+        ax = f"ax{station}"
+        ax = _df.precipitation.plot(color=next(colors), grid=True, label=station)
+    plt.title("Rainfall Predictions", fontsize=12)
+    plt.xlabel("Hourly 3-day Forecast")
+    plt.ylabel("Rainfall (cm)")
     plt.minorticks_off()
-    plt.ylim(0,100)
-    # plt.savefig(check_pt_path + 'loss.pdf')
-    plt.show()
+    plt.ylim(0,10)
+    plt.savefig(f"predictions.jpg")
 
 def reconstruction_predictions(model, input_data):
     """ 

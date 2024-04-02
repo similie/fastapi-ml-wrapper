@@ -150,7 +150,7 @@ def load_data_csv(data_dir,
     df = sample_interp(df.copy(), agg_dict=agg_dict)
     df = df.dropna()
     if pred:        
-        df = df[(df.index >= (daydelta(df.index.max(), -268))) & (df.index <= (daydelta(df.index.max(), -100)))] #lkg
+        df = df[(df.index >= (daydelta(df.index.max(), -568))) & (df.index <= (daydelta(df.index.max(), -390)))] #lkg
     return {s: _df.drop('station', axis=1) for s, _df in df.groupby('station')}, df.drop('station', axis=1).columns.to_list()
 
 def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
@@ -177,7 +177,6 @@ def negatives(X: pd.DataFrame) -> pd.DataFrame:
     return X
 
 def load_dataframe(df: pd.DataFrame):
-    
     cols = [
         "date",
         "station",
