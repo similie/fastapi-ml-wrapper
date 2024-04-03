@@ -40,9 +40,9 @@ def _predict(
     else:
         print("Pretrained model not found...")
     # Feed predictions into dataframes with an extended _df.index
-    # predictions, new_feats = generate_predictions(model, trainer, dm)
+    predictions = generate_predictions(model, trainer, dm)
     # return predictions, new_feats, model
-    return model
+    return predictions
 def generate_predictions(model, trainer, dm, preds: dict = None):
     """
         Generate 6 * 12 hours of predictions, 
@@ -52,12 +52,12 @@ def generate_predictions(model, trainer, dm, preds: dict = None):
     """
     result = {}
     loader = dm.predict_combined_loader(preds=preds)
-    predictions, new_feats = trainer.predict(model, loader)
-    # result = dm.process_preds(predictions)
-    # for i in range(5):
-    #     predictions, new_feats = trainer.predict(model, 
-    #                                   dm.predict_combined_loader(preds=preds))
-    #     preds = dm.process_preds(predictions)
-    #     for s, _df in preds.items():
-    #         result[s] = pd.concat([result[s], _df])
-    return predictions, new_feats
+    predictions = trainer.predict(model, loader)
+    result = dm.process_preds(predictions)
+    for i in range(5):
+        predictions = trainer.predict(model, 
+                                      dm.predict_combined_loader(preds=preds))
+        preds = dm.process_preds(predictions)
+        for s, _df in preds.items():
+            result[s] = pd.concat([result[s], _df])
+    return result

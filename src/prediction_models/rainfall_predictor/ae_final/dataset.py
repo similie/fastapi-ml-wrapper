@@ -66,8 +66,8 @@ class get_dm():
     def process_preds(self, plist):
         plist = [l[-12:][0].squeeze(0) for l in plist]
         indexes = [generate_datetime_index(v.index.max(), periods=l.size(0)) for l, v in zip(plist, self.frames.values())]
-        plist = [pd.DataFrame(self.transforms[0].inverse_transform(p.numpy()), index=i, columns=self.features) for i, p in zip(indexes, plist)]
-        plist = [pd.DataFrame(self.transforms[1].inverse_transform(p.numpy()), index=i, columns=self.features) for i, p in zip(indexes, plist)]
+        plist = [pd.DataFrame(np.hstack((self.transforms[1].inverse_transform(p.numpy()[:,0].reshape(-1,1)), p.numpy()[:,1:])), index=i, columns=self.features) for i, p in zip(indexes, plist)]
+        plist = [pd.DataFrame(self.transforms[0].inverse_transform(p), index=i, columns=self.features) for i, p in zip(indexes, plist)]
         stations = list(self.frames.keys())
         preds = {}
         for s, p in zip(stations, plist):
@@ -115,7 +115,7 @@ class get_dm():
     def predict_combined_loader(self, preds: dict=None):
         """
             Either generates a prediction step dataloader
-            from he sequence datasets of the get_dm class
+            from the sequence datasets of the get_dm class
             or from preds, a dictionary with station ids and 
             dataframes with weather data.
         """

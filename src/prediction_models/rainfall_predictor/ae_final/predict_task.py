@@ -7,5 +7,7 @@ data_path = os.path.join(os.getcwd(), "../tabula_rasa/data/combined.csv")
 #     predictions = _predict(latent_dim, dm)
 #     predict_dict[latent_dim] = predictions
 
+prediction = _predict(data_path, 64)
 
-prediction, new_feats, model = _predict(data_path, 64)
+for k, v in prediction.items():
+    print("STATION #", k, "-->", v.head())
