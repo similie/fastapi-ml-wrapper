@@ -1,16 +1,18 @@
 import os
 from mutils import plot_predictions
 from predict import _predict
+from preprocessor import load_data_json
 
-data_path = os.path.join(os.getcwd(), "../tabula_rasa/data/combined.csv")
-# predict_dict = {}
-# for latent_dim in [64, 128, 256]: #, 256, 512, 1024]:
-#     predictions = _predict(latent_dim, dm)
-#     predict_dict[latent_dim] = predictions
+csv_path = os.path.join(os.getcwd(), "../tabula_rasa/data/combined.csv")
+json_path = '/path/to/json-file' 
 
-prediction = _predict(data_path, 64)
+predictions = _predict(json_path, 256, load_fn=load_data_json)
 
-for k, v in prediction.items():
-    print("STATION #", k, "-->", v.max())
+# Predictions from a CSV file
 
-plot_predictions(prediction)
+# prediction = _predict(csv_path, 128)
+
+# for k, v in prediction.items():
+#     print("STATION #", k, "-->", v.max())
+
+plot_predictions(prediction) 

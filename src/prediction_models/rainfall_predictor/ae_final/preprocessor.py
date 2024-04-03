@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 import numpy as np
 from sklearn.pipeline import make_pipeline
@@ -55,9 +56,45 @@ type_dict = {
 }
 zero_to_one = np.vectorize(lambda x: 0 if x == -1 else 1)
 
-def load_data_csv(data_dir,
-                    pred=None,
-                    type_dict=type_dict):
+
+def load_data_json(strJsonPath: str, pred: bool = True):
+    """
+        Load json and set column names and order
+        to what the pretrained model is expecting.
+    """
+    cols = [
+        "date",
+        "station",
+        "precipitation",
+        "temperature",
+        "humidity",
+        "pressure",
+        "wind_speed",
+        "wind_direction",
+        "solar",
+    ]
+    
+    data = []
+
+    with open(strJsonPath, encoding='utf-8') as f:
+        data = json.load(f)
+        # lines_number = sum(1 for _ in f)
+        # for line in tqdm(f, desc="Loading Json...", total=lines_number*10):
+        #     doc = json.loads(line)
+        #     lst = [doc[col] for col in cols]
+        #     data.append(lst)
+
+    df = pd.DataFrame(data=data, columns=cols)
+    features = df.columns.to_list()
+    features = [ x for x in features if x != 'station']
+    precip = transforms[1].fit_transform(df.precipitation.values.reshape(-1,1))
+    df.precipitation = precip
+    df = pd.DataFrame(transforms[0].fit_transform(df[features].values), columns=df.columns, index=df.index)
+    return {s: _df.drop('station', axis=1) for s, _df in df.groupby('station')}, transforms, features
+
+def load_data_csv(data_dir: str,
+                    pred: bool = False,
+                    type_dict: dict = type_dict):
 
     with open(data_dir) as f:
         lines_number = sum(1 for _ in f)

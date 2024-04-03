@@ -4,9 +4,9 @@ from tqdm.auto import tqdm
 import pandas as pd
 import numpy as np
 from os import path, getcwd
-from typing import Any, Sequence, Optional, Tuple, Iterator, Dict, Callable, Union
+from typing import Callable
 from mutils import collate_batch, generate_datetime_index
-from preprocessor import load_data_csv
+from preprocessor import load_data_csv, load_data_json
 from pytorch_lightning.utilities import CombinedLoader
 
 from preprocessor import transforms
@@ -49,16 +49,18 @@ class get_dm():
     def __init__(self,
                  data_dir: str = path.join(getcwd(), '../tabula_rasa/data/combined.csv'),
                  batch_size: int = 1,
-                 frames: dict = None, #dictionary
+                 frames: dict | None = None,
                  features: list = [],
                  transforms: list = [],
-                 target: list = None):
+                 target: list | None = None,
+                 load_fn=load_data_csv):
         self.data_dir = data_dir
         self.batch_size = batch_size
         self.target = target
         self.frames = frames
+        self.load_fn = load_fn
         if self.frames == None:
-            self.frames, self.transforms, self.features = load_data_csv(self.data_dir, pred=True) # toggle for predictions or training
+            self.frames, self.transforms, self.features = load_fn(self.data_dir, pred=True) # toggle for predictions or training
         else:
             self.frames = frames
         self.sequence_datasets = self.gen_sequence_datasets(self.frames)
@@ -74,7 +76,7 @@ class get_dm():
             preds[s] = p
         return preds
     
-    def gen_sequence_datasets(self, frames: dict):
+    def gen_sequence_datasets(self, frames: dict) -> dict[str, SequenceDataset]:
         sequence_datasets = {}
         for s, _df in frames.items():
             sequence_datasets[s] = SequenceDataset(_df,
@@ -112,7 +114,7 @@ class get_dm():
                                  num_workers=2)
         return test_loader
 
-    def predict_combined_loader(self, preds: dict=None):
+    def predict_combined_loader(self, preds: dict | None = None):
         """
             Either generates a prediction step dataloader
             from the sequence datasets of the get_dm class

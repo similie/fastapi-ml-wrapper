@@ -4,6 +4,7 @@ import pandas as pd
 # model imports
 from layers.model import Forecaster
 from dataset import get_dm
+from preprocessor import load_data_json
 # PyTorch Lightning
 try:
     import pytorch_lightning as pl
@@ -13,6 +14,7 @@ except ModuleNotFoundError:
 def _predict(
         data: str,
         latent_dim: int = 64,
+        load_fn=load_data_json,
         ):
     """
         Returns a dict with station numbers as keys and dataframes 
@@ -26,7 +28,7 @@ def _predict(
         fc_checkpoint_path = os.path.join(FC_MODEL_PATH, os.listdir(FC_MODEL_PATH)[0])
     except FileNotFoundError:
         print("Model weights not found...")
-    dm = get_dm(data_dir=data) 
+    dm = get_dm(data_dir=data, load_fn=load_fn) 
     
     trainer = pl.Trainer(default_root_dir=CHECKPOINTPATH,
                             enable_checkpointing=False,

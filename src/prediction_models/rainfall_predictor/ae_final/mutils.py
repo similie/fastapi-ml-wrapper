@@ -55,7 +55,7 @@ def plot_predictions(preds: dict, target: str = "precipitation"):
     plt.legend(bbox_to_anchor=(1, 1))
     plt.ylabel('rainfall (mm)')
     plt.xlabel('year-month')
-    filename = f"predictions{int(time())}.pdf"    
+    filename = f"./results/predictions{int(time())}.pdf"    
     plt.savefig(filename)
     # plt.show()
     
