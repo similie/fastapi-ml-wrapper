@@ -11,6 +11,11 @@ from pytorch_lightning.loggers.csv_logs import CSVLogger
 
 CHECKPOINTPATH = path.join(getcwd(), "results")
 def _train(latent_dim, dm):
+    """
+        Train the forecaster. Checks for a pre-existing model
+        checkpoint for the given latent dimension, and loads 
+        that instead if it exists.
+    """
     csv_logger = CSVLogger(CHECKPOINTPATH, name=f"FC_model{latent_dim}")
     train_loader = dm.train_combined_loader()
     val_loader = dm.val_combined_loader()

@@ -80,7 +80,11 @@ class Decoder(nn.Module):
         return x
         
 class Autoencoder(pl.LightningModule):
-
+    """
+        Autoencoder: trains on shifted timeseries data
+        using reconstruction loss.
+        Args: batch_size = 1
+    """
     def __init__(self,
                  input_size: int,
                  latent_dim: int,

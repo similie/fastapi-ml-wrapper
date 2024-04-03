@@ -1,4 +1,4 @@
-import os
+from os import path, listdir, getcwd
 # model imports
 from layers.model import Autoencoder 
 # PyTorch Lightning
@@ -9,15 +9,26 @@ except ModuleNotFoundError:
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers.csv_logs import CSVLogger
 
-CHECKPOINTPATH = os.path.join(os.getcwd(), './results')
+CHECKPOINTPATH = path.join(getcwd(), './results')
+
 
 def _train(latent_dim, dm):
+
+    """
+        Train the Autoencoder. Checks for a pre-existing model
+        checkpoint for the given latent dimension and loads 
+        that if it exists. Checkpoints are saved in the results
+        folder. Args: latent_dimension, dm: the datamodule, ie
+        dm = get_dm()
+    """
+    
     csv_logger = CSVLogger(CHECKPOINTPATH, name=f"AE_model{latent_dim}")
+    AE_MODEL_PATH = path.join(getcwd(), f"results/AE_model{latent_dim}/version_0/checkpoints/")
     train_loader = dm.train_combined_loader()
     val_loader = dm.val_combined_loader()
     test_loader = dm.test_combined_loader()
     # Create a PyTorch Lightning trainer with the generation callback
-    trainer = pl.Trainer(default_root_dir=os.path.join(CHECKPOINTPATH, f"AE_{latent_dim}"),
+    trainer = pl.Trainer(default_root_dir=path.join(CHECKPOINTPATH, f"AE_{latent_dim}"),
                          accelerator="cpu",
                          devices=1,
                          enable_checkpointing=True,
@@ -26,14 +37,13 @@ def _train(latent_dim, dm):
                          callbacks=[ModelCheckpoint(save_weights_only=True),
                                     LearningRateMonitor("epoch")])
     # Check whether pretrained model exists. If yes, load it and skip training
-        ae_checkpoint_path = path.join(CHECKPOINTPATH+f"/AE_model{latent_dim}/version_0/checkpoints/", listdir(path.join(CHECKPOINTPATH, f"/AE_model{latent_dim}/version_0/checkpoints/"))[0])
-        pretrained_filename = os.path.join(CHECKPOINTPATH, os.listdir(os.path.join(CHECKPOINTPATH, f"AE_model{latent_dim}/version_0/checkpoints/"))[0])
+    try:
+        ae_checkpoint_path = path.join(AE_MODEL_PATH, listdir(AE_MODEL_PATH)[0])
+        if path.isfile(ae_checkpoint_path):
+            print("Found pretrained Autoencoder.")
+            model = Autoencoder.load_from_checkpoint(pretrained_filename)
     except FileNotFoundError:
-        pretrained_filename = CHECKPOINTPATH
-    if os.path.isfile(pretrained_filename):
-        print("Found pretrained model, loading...")
-        model = Autoencoder.load_from_checkpoint(pretrained_filename)
-    else:
+        print("Loading model...")    
         model = Autoencoder(input_size=7, 
                         latent_dim=latent_dim,
                         dropout=0.7,

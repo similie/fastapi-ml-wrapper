@@ -74,23 +74,36 @@ def load_data_json(strJsonPath: str, pred: bool = True):
         "solar",
     ]
     
-    data = []
+    remap = {
+        "all_weather.date": "date",
+        "all_weather.station": "station",
+        "all_weather.sum_precipitation": "precipitation",
+        "all_weather.avg_temperature": "temperature",    
+        "all_weather.avg_humidity": "humidity",
+        "all_weather.avg_pressure": "pressure",
+        "all_weather.avg_wind_speed": "wind_speed",
+        "all_weather.avg_wind_direction": "wind_direction",
+        "all_weather.avg_solar": "solar",
+    }
 
     with open(strJsonPath, encoding='utf-8') as f:
         data = json.load(f)
-        # lines_number = sum(1 for _ in f)
-        # for line in tqdm(f, desc="Loading Json...", total=lines_number*10):
-        #     doc = json.loads(line)
-        #     lst = [doc[col] for col in cols]
-        #     data.append(lst)
 
-    df = pd.DataFrame(data=data, columns=cols)
+    df = pd.DataFrame(data=data['data'])
+    if df.columns.to_list() != cols:
+        df = df.rename(columns=remap)
+        df = df[cols] 
+    df = duplicate_datetime(df.copy())        
+    df = set_dt_index(df.copy())
     features = df.columns.to_list()
+    print(features)
     features = [ x for x in features if x != 'station']
     precip = transforms[1].fit_transform(df.precipitation.values.reshape(-1,1))
     df.precipitation = precip
-    df = pd.DataFrame(transforms[0].fit_transform(df[features].values), columns=df.columns, index=df.index)
-    return {s: _df.drop('station', axis=1) for s, _df in df.groupby('station')}, transforms, features
+    dfs = {s: _df.drop('station', axis=1) for s, _df in df.groupby('station')} 
+    return {s: pd.DataFrame(transforms[0].fit_transform(_df.values), 
+                            index=_df.index, 
+                            columns=_df.columns) for s, _df in dfs.items()}, transforms, features 
 
 def load_data_csv(data_dir: str,
                     pred: bool = False,

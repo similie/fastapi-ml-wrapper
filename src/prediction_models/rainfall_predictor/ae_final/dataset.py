@@ -12,6 +12,14 @@ from pytorch_lightning.utilities import CombinedLoader
 from preprocessor import transforms
 
 class SequenceDataset(Dataset):
+    """
+       Args: 
+        target (leave blank for the AE)
+        station_name, features, are all
+        included to not loose track of 
+        what data is where and linked to 
+        which station. 
+    """
     def __init__(self, 
                  dataframe,
                  station_name, 
@@ -46,8 +54,18 @@ class SequenceDataset(Dataset):
         return torch.tensor(X).float(), torch.tensor(Y).float()
     
 class get_dm():
+    """
+        Arguments:
+        data_dir - path to datafile
+        load_fn - returns a dict of station_id: dataframe,
+            a list of transforms (ie, quantiletransformer)
+            and a list of feature names with the same name and
+            order as the data. 
+        target - leave empty for the Autoencoder. Set it for 
+        training the Forecaster.
+    """
     def __init__(self,
-                 data_dir: str = path.join(getcwd(), '../tabula_rasa/data/combined.csv'),
+                 data_dir: str = '/home/leigh/Code/ekoh/tabula_rasa/data/combined.csv',
                  batch_size: int = 1,
                  frames: dict | None = None,
                  features: list = [],
@@ -60,7 +78,7 @@ class get_dm():
         self.frames = frames
         self.load_fn = load_fn
         if self.frames == None:
-            self.frames, self.transforms, self.features = load_fn(self.data_dir, pred=True) # toggle for predictions or training
+            self.frames, self.transforms, self.features = load_fn(self.data_dir, pred=False) # toggle for predictions or training
         else:
             self.frames = frames
         self.sequence_datasets = self.gen_sequence_datasets(self.frames)
