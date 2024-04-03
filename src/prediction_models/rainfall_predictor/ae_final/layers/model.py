@@ -180,10 +180,10 @@ class Forecaster(pl.LightningModule):
     def forward(self, x):
         # Initialize hidden state with zeros
         if self.training == False:
-            h0 = torch.empty(x.size(0), self.latent_dim)
+            h0 = torch.empty(2, x.size(0), self.latent_dim)
             nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('relu'))
             # Initialize cell state
-            c0 = torch.empty(x.size(0), self.latent_dim)
+            c0 = torch.empty(2, x.size(0), self.latent_dim)
             nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('relu'))
         else:
             h0 = torch.empty(2, x.size(0), self.latent_dim)
@@ -217,10 +217,10 @@ class Forecaster(pl.LightningModule):
         self.log('test_loss', loss)
 
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
-        inputs, target = batch
+        inputs, target = batch[0].unsqueeze(0), batch[1].unsqueeze(0)
         preds = self(inputs) # target
-        new_features = self.autoencoder(torch.cat((target, inputs), dim=-1))
-        return preds, new_features
+        features = self.autoencoder(inputs)
+        return torch.cat((preds, features[:,:,1:]),dim=-1)
         
         #return self(batch[0].unsqueeze(0))        
 

@@ -63,18 +63,18 @@ class get_dm():
             self.frames = frames
         self.sequence_datasets = self.gen_sequence_datasets(self.frames)
 
-    def process_preds(self, plist):
+    def process_preds(self, plist: list):
         plist = [l[-12:][0].squeeze(0) for l in plist]
         indexes = [generate_datetime_index(v.index.max(), periods=l.size(0)) for l, v in zip(plist, self.frames.values())]
-        plist = [pd.DataFrame(np.hstack((self.transforms[1].inverse_transform(p.numpy()[:,0].reshape(-1,1)), p.numpy()[:,1:])), index=i, columns=self.features) for i, p in zip(indexes, plist)]
-        plist = [pd.DataFrame(self.transforms[0].inverse_transform(p), index=i, columns=self.features) for i, p in zip(indexes, plist)]
+        plist = [pd.DataFrame(self.transforms[0].inverse_transform(p.numpy()), index=i, columns=self.features) for i, p in zip(indexes, plist)]
+        plist = [pd.DataFrame(np.hstack((self.transforms[1].inverse_transform(p.values[:,0].reshape(-1,1)), p.values[:,1:])), index=i, columns=self.features) for i, p in zip(indexes, plist)]
         stations = list(self.frames.keys())
         preds = {}
         for s, p in zip(stations, plist):
             preds[s] = p
         return preds
     
-    def gen_sequence_datasets(self, frames):
+    def gen_sequence_datasets(self, frames: dict):
         sequence_datasets = {}
         for s, _df in frames.items():
             sequence_datasets[s] = SequenceDataset(_df,
@@ -83,13 +83,13 @@ class get_dm():
                                                    target=self.target)
         return sequence_datasets
              
-    def gen_train_sets(self, dataset):
+    def gen_train_sets(self, dataset: SequenceDataset):
         split = int(len(dataset)*0.6)
         indices = np.arange(split)
         train_set = Subset(dataset, indices)
         return train_set
     
-    def gen_val_loaders(self, dataset):
+    def gen_val_loaders(self, dataset: SequenceDataset):
         split = int(len(dataset)*0.6)
         split1 = int(len(dataset)*0.8)
         indices1 = np.arange(split, split1)
@@ -101,7 +101,7 @@ class get_dm():
                                 num_workers=2)
         return val_loader
 
-    def gen_test_loader(self, dataset):
+    def gen_test_loader(self, dataset: SequenceDataset):
         split = int(len(dataset)*0.8)
         indices = np.arange(split, len(dataset))
         test_loader = DataLoader(Subset(dataset, indices),

@@ -1,5 +1,6 @@
-from predict import _predict
 import os
+from mutils import plot_predictions
+from predict import _predict
 
 data_path = os.path.join(os.getcwd(), "../tabula_rasa/data/combined.csv")
 # predict_dict = {}
@@ -10,4 +11,6 @@ data_path = os.path.join(os.getcwd(), "../tabula_rasa/data/combined.csv")
 prediction = _predict(data_path, 64)
 
 for k, v in prediction.items():
-    print("STATION #", k, "-->", v.head())
+    print("STATION #", k, "-->", v.max())
+
+plot_predictions(prediction)
