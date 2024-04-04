@@ -31,27 +31,27 @@ class SequenceDataset(Dataset):
         self.target = target
         self.sequence_length = sequence_length
         self.prediction_window = prediction_window
-        self.dataframe = dataframe 
+        self.dataframe = dataframe
+        if self.target == None:
+            self.target = self.features
+        self.X = torch.tensor(self.dataframe[self.features].iloc[:-self.prediction_window].values).float()
+        self.y = torch.tensor(self.dataframe[self.target].shift(
+            periods=-self.prediction_window,
+            freq='h').values).float()
 
     def __len__(self):
         return len(self.dataframe)
 
     def __getitem__(self, idx):
-        if self.target == None:
-            self.target = self.features
-        if (idx+self.sequence_length) > len(self.dataframe):
-            indexes = list(range(idx, len(self.dataframe)))
+        if idx >= self.sequence_length - 1:
+            idx_start = idx - self.sequence_length + 1
+            x = self.X[i_start:(idx + 1), :]
         else:
-            indexes = list(range(idx, idx + self.sequence_length))
-        X = self.dataframe[self.features].iloc[indexes, :].values
-        if self.features == self.target:
-            Y = self.dataframe[self.target].shift(
-                periods=self.prediction_window, 
-                freq='h').iloc[indexes, :].values
-        else:
-            Y = self.dataframe[self.target].iloc[indexes, :].values
+            padding = self.X[0].repeat(self.sequence_length - idx - 1, 1)
+            x = self.X[0:(idx + 1), :]
+            x = torch.cat((padding, x), 0)
 
-        return torch.tensor(X).float(), torch.tensor(Y).float()
+        return x, self.y[idx]
     
 class get_dm():
     """

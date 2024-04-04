@@ -1,6 +1,0 @@
-act_fn: !!python/name:torch.nn.modules.activation.GELU ''
-ae_checkpoint_path: /home/leigh/Code/ekoh/ae_simple/results/AE_model256/version_0/checkpoints/epoch=2-step=27399.ckpt
-autoencoder_class: !!python/name:layers.model.Autoencoder ''
-dropout: 0.5
-input_size: 7
-latent_dim: 256
