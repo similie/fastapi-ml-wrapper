@@ -34,24 +34,25 @@ class SequenceDataset(Dataset):
         self.dataframe = dataframe
         if self.target == None:
             self.target = self.features
-        self.X = torch.tensor(self.dataframe[self.features].iloc[:-self.prediction_window].values).float()
-        self.y = torch.tensor(self.dataframe[self.target].shift(
+        self.X = self.dataframe[self.features] # .iloc[:-self.prediction_window]
+        self.Y = self.dataframe[self.target].shift(
             periods=-self.prediction_window,
-            freq='h').values).float()
+            freq='h')
 
     def __len__(self):
         return len(self.dataframe)
 
     def __getitem__(self, idx):
-        if idx >= self.sequence_length - 1:
-            idx_start = idx - self.sequence_length + 1
-            x = self.X[i_start:(idx + 1), :]
+        if (idx+self.sequence_length) > len(self.dataframe):
+            indexes = list(range(idx, len(self.dataframe)))
         else:
-            padding = self.X[0].repeat(self.sequence_length - idx - 1, 1)
-            x = self.X[0:(idx + 1), :]
-            x = torch.cat((padding, x), 0)
-
-        return x, self.y[idx]
+            indexes = list(range(idx, idx + self.sequence_length))
+        x = self.X.iloc[indexes, :].values
+        if self.features == self.target:
+            y = self.Y.iloc[indexes, :].values
+        else: 
+            y = self.Y.iloc[indexes].values
+        return torch.tensor(x).float(), torch.tensor(y).float()
     
 class get_dm():
     """
