@@ -40,7 +40,7 @@ class SequenceDataset(Dataset):
         self.dataframe = dataframe
         if self.target == None:
             self.target = self.features
-        self.X = self.dataframe[self.features] # .iloc[:-self.prediction_window]
+        self.X = self.dataframe[self.features] 
         self.Y = self.dataframe[self.target].shift(
             periods=-self.prediction_window,
             freq='h')
@@ -105,7 +105,9 @@ class data_module():
             self.val_dataloader = self.val_combined_loader()
             self.test_dataloader = self.test_combined_loader()
         if stage == "predict":
-            self.predict_dataloader = self.predict_combined_loader()   
+            self.predict_dataloader = self.predict_combined_loader()  
+
+            # WILL DELETE ONE ALL TESTS DONE 
     # def process_preds(self, plist: list) -> dict[str, pd.DataFrame]:
     #     plist = [l[-12:][0].squeeze(0) for l in plist]
     #     indexes = [generate_datetime_index(v.index.max(), periods=l.size(0)) for l, v in zip(plist, self.frames.values())]
