@@ -112,7 +112,7 @@
       "all_weather.avg_temperature": 30.15000009536743,
       "all_weather.avg_humidity": 88.39826838175456,
       "all_weather.avg_pressure": 1006.506669108073,
-      "all_weather.sum_precipitation": 0
+      "all_weather.sum_precipitation": 1
     },
     {
       "all_weather.station": 27,
@@ -126,7 +126,7 @@
       "all_weather.avg_temperature": 30.39833339055379,
       "all_weather.avg_humidity": 89.56556905110678,
       "all_weather.avg_pressure": 1005.6250010172527,
-      "all_weather.sum_precipitation": 0
+      "all_weather.sum_precipitation": 2
     },
     {
       "all_weather.station": 27,

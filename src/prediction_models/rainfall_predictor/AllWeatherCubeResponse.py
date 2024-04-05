@@ -1,7 +1,10 @@
+import sys
+from os import path
 from datetime import datetime
-from ...interfaces.CubeJsQueryResponse import QueryMeasuresResponse, CubeQueryResponse
-from .AllWeatherCubeRequest import AllWeatherQueryMeasures
-from .AllWeatherConfig import getAllWeatherConfig
+sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
+from interfaces.CubeJsQueryResponse import QueryMeasuresResponse, CubeQueryResponse
+from AllWeatherCubeRequest import AllWeatherQueryMeasures
+from AllWeatherConfig import getAllWeatherConfig
 
 
 class AllWeatherQueryMeasuresResponse(AllWeatherQueryMeasures, QueryMeasuresResponse):

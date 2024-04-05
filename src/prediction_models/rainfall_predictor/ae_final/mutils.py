@@ -1,3 +1,4 @@
+from os import path, listdir
 ## Imports for plotting
 import matplotlib.pyplot as plt
 import matplotlib
@@ -7,14 +8,24 @@ from time import time
 
 import torch
 import pandas as pd
-from torch.nn.utils.rnn import pad_sequence
 
-def collate_batch(batch):
-    x = [item[0] for item in batch]
-    x = pad_sequence(x, batch_first=True)
-    y = [item[1] for item in batch]
-    y = pad_sequence(y, batch_first=True)
-    return x, y
+def get_checkpoint_filepath(model_prefix: str = "FC",
+                            latent_dim: int = 128, 
+                            checkpoint_path: str ="results"):
+    prefixes = ["FC", "AE"]
+    if model_prefix not in prefixes:
+        raise ValueError("Invalid prefix. Expected one of: %s" % prefixes)
+    project_root = path.dirname(__file__)
+    filename = listdir(path.join(project_root, 
+                        checkpoint_path,
+                        f"{model_prefix}_model{latent_dim}",
+                        "version_0/checkpoints"))[0]
+    
+    return path.join(project_root, 
+                    checkpoint_path,
+                    f"{model_prefix}_model{latent_dim}",
+                    "version_0/checkpoints",
+                    filename)  
 
 def plot_loss(model_dict, check_pt_path):
     latent_dims = sorted([k for k in model_dict])
@@ -79,5 +90,3 @@ def reconstruction_predictions(model, input_data):
     reconst_timeseries = reconst_timeseries.cpu()
     return reconst_timeseries.numpy()
 
-def generate_datetime_index(start_time, periods=12):
-    return pd.date_range(start=start_time, freq='h', periods=periods)

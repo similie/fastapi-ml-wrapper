@@ -19,7 +19,7 @@ AE for time-series prediction
   *  ignored by git, see the .gitignore  
   
 `Autoencoder` in the `task.py` file in root, **must**  
-link to the csv in the `dataset.py` file in the `get_dm`  
+link to the csv in the `dataset.py` file in the `data_module`  
 class initializer... That's the only config  
 except for the latent dimension, which is passed to the   
 `_train` method, also in `task.py`. 

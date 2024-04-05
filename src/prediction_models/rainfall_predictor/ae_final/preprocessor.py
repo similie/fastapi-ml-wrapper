@@ -1,22 +1,6 @@
 import json
 import pandas as pd
 import numpy as np
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import PowerTransformer, StandardScaler, QuantileTransformer, RobustScaler
-from scipy.stats import zscore
-
-_processor = make_pipeline(RobustScaler())
-_power = make_pipeline(QuantileTransformer(n_quantiles=200))
-transforms = [ _processor, _power ]
-
-from dateutil.relativedelta import relativedelta
-# Add train and test flags for time deltas eg.
-
-def monthdelta(date, delta):
-    return date + relativedelta(months=delta)
-
-def daydelta(date, delta):
-    return date + relativedelta(days=delta)
 
 from tqdm.auto import tqdm
 
@@ -54,13 +38,11 @@ type_dict = {
     "wind_direction": float,
     "solar": float,
 }
-zero_to_one = np.vectorize(lambda x: 0 if x == -1 else 1)
-
 
 def load_data_json(strJsonPath: str, pred: bool = True):
     """
-        Load json and set column names and order
-        to what the pretrained model is expecting.
+    Load json and set column names and order
+    to what the pretrained model is expecting.
     """
     cols = [
         "date",
@@ -130,28 +112,15 @@ def load_data_csv(data_dir: str,
             )
         ]
     )
-    df.drop(df.loc[df["station"] == '27'].index, inplace=True)
-    df = duplicate_datetime(df.copy())        
-    df = set_dt_index(df.copy())
-    df = df[(df.index.year.isin([2022, 2023]))].copy()
-    df = negatives(df.copy())
-    df = sample_interp(df.copy(), agg_dict=agg_dict)
-    df = df.dropna()
-    features = df.columns.to_list()
-    features = [ x for x in features if x != 'station']
-    precip = transforms[1].fit_transform(df.precipitation.values.reshape(-1,1))
-    df.precipitation = precip
-    # df = generate_time_lags(df, "precipitation", 24)
-    if pred:        
-        df = df[(df.index >= (daydelta(df.index.max(), -568))) & (df.index <= (daydelta(df.index.max(), -390)))] #lkg
-    dfs = {s: _df.drop('station', axis=1) for s, _df in df.groupby('station')} 
-    return {s: pd.DataFrame(transforms[0].fit_transform(_df.values), 
-                            index=_df.index, 
-                            columns=_df.columns) for s, _df in dfs.items()}, transforms, features 
-    # df = df.drop('station', axis=1)
-    # df = pd.DataFrame(transforms[0].fit_transform(df.values),
-    #                   index=df.index,
-    #                   columns=df.columns)
+    return load_dataframe(df)
+
+def load_dataframe(json_list: list[str]) -> dict:
+    # df.drop(df.loc[df["station"] == '27'].index, inplace=True)
+    return pd.json_normalize(json_list)
+   # df = duplicate_datetime(df.copy())        
+   # df = set_dt_index(df.copy())
+   # return {s: _df.drop('station', axis=1) for s, _df in df.groupby('station')} 
+
 def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
     df.set_index("date", inplace=True)
     return df
@@ -204,5 +173,3 @@ def negatives(X: pd.DataFrame) -> pd.DataFrame:
 #                 .assign(day_of_week = df_gen.index.dayofweek)
 #                 .assign(week_of_year = df_gen.index.isocalendar().week)
 #               )
-
-# df_features.head(1).iloc[:,-4:]

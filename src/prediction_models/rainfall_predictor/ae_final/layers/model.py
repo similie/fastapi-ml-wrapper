@@ -6,10 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 # PyTorch Lightning
-try:
-    import pytorch_lightning as pl
-except ModuleNotFoundError:
-  print("Install lightning...")
+import pytorch_lightning as pl
 
 class Encoder(nn.Module):
     def __init__(self,
@@ -119,17 +116,7 @@ class Autoencoder(pl.LightningModule):
 
     def configure_optimizers(self):
         return optim.AdamW(self.parameters(), lr=1e-3, weight_decay=0.01)
-    # def configure_optimizers(self):
-    #     optimizer = optim.AdamW(self.parameters(), lr=1e-3)
-    #     # Using a scheduler is optional but can be helpful.
-    #     # The scheduler reduces the LR if the validation performance hasn't improved for the last N epochs
-    #     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,
-    #                                                      mode='min',
-    #                                                      factor=0.2,
-    #                                                      patience=20,
-    #                                                      min_lr=5e-5)
-    #     return {"optimizer": optimizer, "lr_scheduler": scheduler, "monitor": f"val_loss/dataloader_idx_{dataloader_idx}"}
-
+                                                          
     def training_step(self, batch, batch_idx, dataloader_idx=0):
         loss = self._reconstruction_loss(batch)
         self.log('train_loss', loss)

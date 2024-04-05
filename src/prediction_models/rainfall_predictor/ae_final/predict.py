@@ -1,59 +1,40 @@
 import os
-# import torch
+import torch
 import pandas as pd
 # model imports
-from layers.model import Forecaster
-from dataset import get_dm
-from preprocessor import load_data_json
-# PyTorch Lightning
-try:
-    import pytorch_lightning as pl
-except ModuleNotFoundError:
-  print("Install lightning...")
+from from_pretrained import forecaster_from_pretrained
+from dataset import data_module
+import pytorch_lightning as pl
 
 def _predict(
-        data: str,
-        latent_dim: int = 64,
-        load_fn=load_data_json,
-        ):
+        data: dict[str, pd.DataFrame],
+        checkpoint_path: str,
+        ) -> dict[str, pd.DataFrame]:
     """
-        Returns a dict with station numbers as keys and dataframes 
-        of hourly weather station predictions. Whatever time frame 
-        you supply, the system will return 6 times the length up to 
-        a limit of 12 hours, or 6 * 12 = 72 hours / 3 days.
+    Returns a dict with station numbers as keys and dataframes 
+    of hourly weather station predictions. Returns a 3-day 
+    forecast of precipitation.
     """
-    CHECKPOINTPATH = os.path.join(os.getcwd(), "results")
-    try:
-        FC_MODEL_PATH = os.path.join(os.getcwd(), f"results/FC_model{latent_dim}/version_0/checkpoints/")
-        fc_checkpoint_path = os.path.join(FC_MODEL_PATH, os.listdir(FC_MODEL_PATH)[0])
-    except FileNotFoundError:
-        print("Model weights not found...")
-    dm = get_dm(data_dir=data, load_fn=load_fn) 
-    
-    trainer = pl.Trainer(default_root_dir=CHECKPOINTPATH,
+    model = forecaster_from_pretrained(checkpoint_path)
+    dm = data_module(data) 
+    dm.setup(stage="predict")
+    trainer = pl.Trainer(default_root_dir="results",
                             enable_checkpointing=False,
                             accelerator="cpu",
                             devices=1)
-    
-    if os.path.isfile(fc_checkpoint_path):
-        print("Found pretrained model, loading...")
-        model = Forecaster.load_from_checkpoint(fc_checkpoint_path)
-        model.freeze()
-    else:
-        print("Pretrained model not found...")
-    # Feed predictions into dataframes with an extended _df.index
-    predictions = generate_predictions(model, trainer, dm)
-    # return predictions, new_feats, model
-    return predictions
-def generate_predictions(model, trainer, dm, preds: dict = None):
+     
+    return generate_predictions(model, trainer, dm)
+
+def generate_predictions(model: pl.LightningModule, 
+                            trainer: pl.Trainer, 
+                            dm: data_module, 
+                            preds: dict | None = None,
+                        ):
     """
-        Generate 6 * 12 hours of predictions, 
-        either raw, or to be fed as a latent- 
-        space representation into a second
-        specialized forecaster model.
+    Generates 6 x 12-hour predictions
+    station by station.
     """
-    result = {}
-    loader = dm.predict_combined_loader(preds=preds)
+    loader = dm.predict_dataloader()
     predictions = trainer.predict(model, loader)
     result = dm.process_preds(predictions)
     for i in range(5):

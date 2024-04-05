@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
+from dotenv import load_dotenv
+load_dotenv()
 
 class AllWeatherConfig(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
@@ -10,52 +11,35 @@ class AllWeatherConfig(BaseSettings):
     cube_port: int = 4000
     cube_auth_key: str = ''
 
-
 class ExperimentConfig(BaseSettings):
     '''
     Experiments config settings, with .env namespace aliases
     '''
     model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='experiment_')
-    name: str
-    train_path: str
-    # val_path: str
-    # pred_path: str
-    check_path: str
-    lr: float
-    weight_decay: float
     target_col: str
-    groupby_col: str
-    prediction_window: int = 168
-    batch_size: int = 1
-    sequence_length: int = 12
-
+    features: list[str]
+    prediction_window: int = 12
 
 class LstmConfig(BaseSettings):
     '''
     LSTM config settings, with .env namespace aliases
     '''
     model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='lstm_')
-    name: str
-    n_features: int
-    hidden_size: int
-    sequence_length: int = 12
-    batch_size: int = 1
-    num_layers: int = 2
+    check_path: str
+    prefix: str
+    input_size: int
+    latent_dim: int
+    output_size: int = 1
     dropout: float = 0.5
-    check_path: str = ''
-
 
 class TrainerConfig(BaseSettings):
     '''
     Trainer config settings, with .env namespace aliases
     '''
     model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='trainer_')
-    precision: int
     accelerator: str
     default_root_dir: str
-    max_epochs: int
-    log_every_n_steps: int
-
+    epochs: int
 
 class AllWeatherMLConfig(BaseSettings):
     '''
@@ -67,14 +51,12 @@ class AllWeatherMLConfig(BaseSettings):
     trainer_config: TrainerConfig = TrainerConfig()
     checkpoint_path: str = 'src/prediction_models/rainfall_predictor/project/checkpoints/'
 
-
 @lru_cache
 def getAllWeatherConfig():
     '''
     Lazy load all weather config
     '''
     return AllWeatherConfig()
-
 
 @lru_cache
 def getAllWeatherMLConfig():
