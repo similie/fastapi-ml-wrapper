@@ -62,7 +62,7 @@ def plot_predictions(preds: dict, target: str = "precipitation"):
                           legend='full', 
                           lw=3)
 
-    ax.xaxis.set_major_locator(ticker.MultipleLocator(8))
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
     ax.set(ylim=(-.01, 1))
     plt.legend(bbox_to_anchor=(1, 1))
     plt.ylabel('rainfall (mm)')

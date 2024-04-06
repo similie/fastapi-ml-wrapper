@@ -15,21 +15,22 @@ from pytorch_lightning.utilities import CombinedLoader
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PowerTransformer, StandardScaler, QuantileTransformer, RobustScaler
 
-processor = make_pipeline(RobustScaler())
-power = make_pipeline(QuantileTransformer(n_quantiles=200))
-
-transforms = [processor, power]
-
 class SequenceDataset(Dataset):
     """
     Timeseries dataset 
     Args: 
     - target (leave as `None` for the AE)
- 
+    - set target as precipitation for forecasting 
     """
     def __init__(self, 
                  dataframe,
-                 features,
+                 features: list = ["precipitation", 
+                                    "temperature", 
+                                    "humidity", 
+                                    "pressure", 
+                                    "wind_speed", 
+                                    "wind_direction",
+                                    "solar"],
                  target=None, 
                  prediction_window=12,
                  sequence_length=12):
@@ -40,6 +41,8 @@ class SequenceDataset(Dataset):
         self.dataframe = dataframe
         if self.target == None:
             self.target = self.features
+        # else:
+        #     self.features = [x for x in self.features if x != self.target]
         self.X = self.dataframe[self.features] 
         self.Y = self.dataframe[self.target].shift(
             periods=-self.prediction_window,
@@ -58,14 +61,15 @@ class SequenceDataset(Dataset):
         return torch.tensor(x).float(), torch.tensor(y).float()
 
     def pad_df(self, idx):
-        g = gap(idx)            
+        g = self.gap(idx)            
         indexes = list(range(idx, len(self.dataframe)))
-        return to_pad(indexes, g)
+        return self.to_pad(indexes, g)
 
     def gap(self, idx: int) -> int:
         return idx+self.sequence_length - len(self.dataframe)
 
-    def to_pad(indexes: list, 
+    def to_pad(self, 
+               indexes: list, 
                 gap: int) -> tuple[np.ndarray, np.ndarray]:
         x_to_pad = self.X.iloc[indexes, :]
         y_to_pad = self.Y.iloc[indexes, :]
@@ -90,24 +94,25 @@ class data_module():
                                     "wind_direction",
                                     "solar"],
                  batch_size: int = 1,
-                 transforms: list = transforms,
                  target: list | None = None):
-        self.data_dir = data
         self.batch_size = batch_size
+        self.data = load_dataframe(data)
         self.features = features
         self.target = target
-        self.frames = load_dataframe(self.data_dir)
-        self.sequence_datasets = self.gen_sequence_datasets(self.frames, self.features)
+        self.transforms = [RobustScaler(), 
+            QuantileTransformer(n_quantiles=200)]
+        self.frames = self.frame_scale(self.data)
+        self.sequence_datasets = self.gen_sequence_datasets(self.frames)
 
     def setup(self, stage=None):
-        if stage == None | "fit":
+        if stage == "fit":
             self.train_dataloader =  self.train_combined_loader()
             self.val_dataloader = self.val_combined_loader()
             self.test_dataloader = self.test_combined_loader()
         if stage == "predict":
             self.predict_dataloader = self.predict_combined_loader()  
-
-            # WILL DELETE ONE ALL TESTS DONE 
+            
+            # WILL DELETE ONCE ALL TESTS DONE 
     # def process_preds(self, plist: list) -> dict[str, pd.DataFrame]:
     #     plist = [l[-12:][0].squeeze(0) for l in plist]
     #     indexes = [generate_datetime_index(v.index.max(), periods=l.size(0)) for l, v in zip(plist, self.frames.values())]
@@ -120,10 +125,10 @@ class data_module():
     #     return preds
 
     def process_preds(self, preds: list) -> dict[str, pd.DataFrame]:
-        t_preds = self.truncate_predication_sequences(preds)
-        t_trans = self.inverse_transform_pipeline(t_preds)
+        t_preds = self.truncate_prediction_sequences(preds)
         station_idx = [(s, self.generate_datetime_index(_df.index.max()))
                             for s, _df in self.frames.items()]
+        t_trans = self.inverse_transform_pipeline(t_preds)
         preds = {}
         for s, p in zip(station_idx, t_trans):
             preds[s[0]] = pd.DataFrame(p, columns=self.features, index=s[1])
@@ -132,29 +137,37 @@ class data_module():
     def truncate_prediction_sequences(self, preds: list) -> list:
         return [l[-12:][0].squeeze(0) for l in preds]
 
-    def generate_datetime_index(self, start_time, periods=11):
+    def generate_datetime_index(self, start_time, periods=12):
         return pd.date_range(start=start_time, freq='h', periods=periods)
     
-    def inverse_transform_pipeline(self, tvals: torch.tensor, idx: pd.date_range) -> pd.DataFrame:
-        vals = self.transforms[0].inverse_transform(tvals.numpy())
-        precip = self.transforms[1].inverse_transform(vals[:,0])
-        return np.hstack((precip, vals[:,1:]))
-
-    def transform_pipeline(self, df):
-        if df.precipitation:
-            precipitation = df['precipitation'].values.reshape(-1,1)
-            df['precipitation'] = self.transforms[1].fit_transform(precipitation)
+    def inverse_transform_pipeline(self, 
+                                   tvals: list[torch.tensor]) -> np.array:
+        results = []
+        for t in tvals:
+            v =self.transforms[0].inverse_transform(t.numpy())
+            p = self.transforms[1].inverse_transform(v[:,0].reshape(-1,1))
+            results.append(np.hstack((p, v[:,1:])))
+        return results
+    
+    def frame_scale(self, frames: dict):
+        result = {}
+        for s, _df in frames.items():
+            result[s] = self.transform_pipeline(_df)
+        return result
+    
+    def transform_pipeline(self, df: pd.DataFrame):
+        if "precipitation" in df.columns.to_list():
+            precip = df['precipitation'].values.reshape(-1,1)
+            df['precipitation'] = self.transforms[1].fit_transform(precip)
         vals = df.values
         return pd.DataFrame(self.transforms[0].fit_transform(vals),
                             columns=df.columns,
                             index=df.index) 
 
-    def gen_sequence_datasets(self, frames: dict, features, target=None) -> dict[str, SequenceDataset]:
+    def gen_sequence_datasets(self, frames: dict, target=['precipitation']) -> dict[str, SequenceDataset]:
         sequence_datasets = {}
         for s, _df in frames.items():
             sequence_datasets[s] = SequenceDataset(_df,
-                                                   s,
-                                                   features=features,
                                                    target=target)
         return sequence_datasets
              
@@ -196,7 +209,7 @@ class data_module():
         """
         pred_loaders = {}
         if preds:
-            datasets = self.gen_sequence_datasets(preds, self.features, self.target)
+            datasets = self.gen_sequence_datasets(preds)
         else:
             datasets = self.sequence_datasets
         for s, _df in datasets.items():

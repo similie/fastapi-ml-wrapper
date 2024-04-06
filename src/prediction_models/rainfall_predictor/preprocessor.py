@@ -4,6 +4,19 @@ import numpy as np
 
 from tqdm.auto import tqdm
 
+
+cols = [
+    "date",
+    "station",
+    "precipitation",
+    "temperature",
+    "humidity",
+    "pressure",
+    "wind_speed",
+    "wind_direction",
+    "solar",
+]
+
 agg_dict = {
     "station": "ffill",
     "precipitation": "sum",
@@ -115,12 +128,12 @@ def load_data_csv(data_dir: str,
     return load_dataframe(df)
 
 def load_dataframe(json_list: list[str]) -> dict:
-    # df.drop(df.loc[df["station"] == '27'].index, inplace=True)
-    return pd.json_normalize(json_list)
-   # df = duplicate_datetime(df.copy())        
-   # df = set_dt_index(df.copy())
-   # return {s: _df.drop('station', axis=1) for s, _df in df.groupby('station')} 
-
+    df = pd.json_normalize(json_list)
+    df = df[cols].copy()
+    df = duplicate_datetime(df.copy())        
+    df = set_dt_index(df.copy())
+    return {s: _df.drop('station', axis=1) for s, _df in df.groupby('station')} 
+    
 def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
     df.set_index("date", inplace=True)
     return df

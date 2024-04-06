@@ -1,8 +1,10 @@
 import os
 import torch
 import pandas as pd
+
 # model imports
 from from_pretrained import forecaster_from_pretrained
+from layers.model import Forecaster
 from dataset import data_module
 import pytorch_lightning as pl
 
@@ -15,6 +17,7 @@ def _predict(
     of hourly weather station predictions. Returns a 3-day 
     forecast of precipitation.
     """
+
     model = forecaster_from_pretrained(checkpoint_path)
     dm = data_module(data) 
     dm.setup(stage="predict")
@@ -34,7 +37,7 @@ def generate_predictions(model: pl.LightningModule,
     Generates 6 x 12-hour predictions
     station by station.
     """
-    loader = dm.predict_dataloader()
+    loader = dm.predict_combined_loader()
     predictions = trainer.predict(model, loader)
     result = dm.process_preds(predictions)
     for i in range(5):

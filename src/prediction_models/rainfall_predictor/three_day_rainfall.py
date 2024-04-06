@@ -2,13 +2,12 @@ import sys
 from os import path, getcwd
 import json
 
-from preprocessor import load_dataframe
 from predict import _predict
 from dataset import data_module
 from mutils import get_checkpoint_filepath, plot_predictions
 
 from from_pretrained import forecaster_from_pretrained
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+# sys.path.append( path.dirname( path.abspath(__file__) ) )
 from AllWeatherConfig import getAllWeatherConfig
 from AllWeatherCubeResponse import AllWeatherCubeQueryResponse
 from AllWeatherCubeResponse import cleanCubeNameFromResponseKeys
@@ -33,11 +32,14 @@ def loadJsonFixture():
         jsonData = json.load(file)
         return json.dumps(jsonData)
 
-check_path = get_checkpoint_filepath(latent_dim=256)
-data = serialise_ml_data()
-weather_data = data.model_dump(by_alias=True)['data']
-predictions = _predict(weather_data, check_path)
-plot_predictions(predictions)
+if __name__ == "__main__":
+
+    check_path = get_checkpoint_filepath(latent_dim=256)
+    data = serialise_ml_data()
+    weather_data = data.model_dump(by_alias=True)['data']
+    predictions = _predict(weather_data, check_path)
+    plot_predictions(predictions)
+    
 # pdf saved to the results folder root
 
 
