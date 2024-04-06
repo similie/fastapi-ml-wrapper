@@ -106,23 +106,11 @@ class data_module():
 
     def setup(self, stage=None):
         if stage == "fit":
-            self.train_dataloader =  self.train_combined_loader()
+            self.train_dataloader = self.train_combined_loader()
             self.val_dataloader = self.val_combined_loader()
             self.test_dataloader = self.test_combined_loader()
         if stage == "predict":
             self.predict_dataloader = self.predict_combined_loader()  
-            
-            # WILL DELETE ONCE ALL TESTS DONE 
-    # def process_preds(self, plist: list) -> dict[str, pd.DataFrame]:
-    #     plist = [l[-12:][0].squeeze(0) for l in plist]
-    #     indexes = [generate_datetime_index(v.index.max(), periods=l.size(0)) for l, v in zip(plist, self.frames.values())]
-    #     plist = [pd.DataFrame(self.transforms[0].inverse_transform(p.numpy()), index=i, columns=self.features) for i, p in zip(indexes, plist)]
-    #     plist = [pd.DataFrame(np.hstack((self.transforms[1].inverse_transform(p.values[:,0].reshape(-1,1)), p.values[:,1:])), index=i, columns=self.features) for i, p in zip(indexes, plist)]
-    #     stations = list(self.frames.keys())
-    #     preds = {}
-    #     for s, p in zip(stations, plist):
-    #         preds[s] = p
-    #     return preds
 
     def process_preds(self, preds: list) -> dict[str, pd.DataFrame]:
         t_preds = self.truncate_prediction_sequences(preds)

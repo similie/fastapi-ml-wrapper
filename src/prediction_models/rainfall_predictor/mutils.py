@@ -52,22 +52,24 @@ def plot_predictions(preds: dict, target: str = "precipitation"):
     """
     sns.set_style('darkgrid')
     sns.set(rc={'figure.figsize':(14,8)})
-    
+    df_list = []
     for s, _df in preds.items():
         _df['station'] = s
-        ax = sns.lineplot(data=_df, 
-                          x =_df.index, 
-                          y = _df[target],
-                          hue=_df['station'], palette='viridis',
-                          legend='full', 
-                          lw=3)
+        df_list.append(_df)
 
-    ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
+    concat_df = pd.concat(df_list).sort_index()
+    ax = sns.lineplot(data=concat_df, 
+                      x = concat_df.index, 
+                      y = concat_df[target],
+                      hue=concat_df['station'], palette='viridis',
+                      legend='full', 
+                      lw=3)
+    ax.xaxis.set_major_locator(ticker.AutoLocator())
     ax.set(ylim=(-.01, 1))
     plt.legend(bbox_to_anchor=(1, 1))
     plt.ylabel('rainfall (mm)')
-    plt.xlabel('year-month')
-    filename = f"./results/predictions{int(time())}.pdf"    
+    plt.xlabel('month-day-hour')
+    filename = f"./results/predictions{int(time())}.pdf"
     plt.savefig(filename)
     # plt.show()
     
