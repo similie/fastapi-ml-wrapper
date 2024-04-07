@@ -4,11 +4,11 @@ import numpy as np
 from tqdm.auto import tqdm
 
 import torch
+from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import (Dataset, 
                             DataLoader, 
                             Subset, 
                             ConcatDataset)
-
 from preprocessor import load_dataframe
 from pytorch_lightning.utilities import CombinedLoader
 
@@ -39,10 +39,10 @@ class SequenceDataset(Dataset):
         self.sequence_length = sequence_length
         self.prediction_window = prediction_window
         self.dataframe = dataframe
+        
         if self.target == None:
             self.target = self.features
-        # else:
-        #     self.features = [x for x in self.features if x != self.target]
+            
         self.X = self.dataframe[self.features] 
         self.Y = self.dataframe[self.target].shift(
             periods=-self.prediction_window,
@@ -96,13 +96,14 @@ class data_module():
                  batch_size: int = 1,
                  target: list | None = None):
         self.batch_size = batch_size
-        self.data = load_dataframe(data)
+        self.data = load_dataframe(data, json=False) # toggle to True for predictions
         self.features = features
         self.target = target
         self.transforms = [RobustScaler(), 
             QuantileTransformer(n_quantiles=200)]
         self.frames = self.frame_scale(self.data)
-        self.sequence_datasets = self.gen_sequence_datasets(self.frames)
+        self.sequence_datasets = self.gen_sequence_datasets(self.frames, 
+                                                            self.target)
 
     def setup(self, stage=None):
         if stage == "fit":
@@ -152,7 +153,7 @@ class data_module():
                             columns=df.columns,
                             index=df.index) 
 
-    def gen_sequence_datasets(self, frames: dict, target=['precipitation']) -> dict[str, SequenceDataset]:
+    def gen_sequence_datasets(self, frames: dict, target) -> dict[str, SequenceDataset]:
         sequence_datasets = {}
         for s, _df in frames.items():
             sequence_datasets[s] = SequenceDataset(_df,
@@ -188,18 +189,15 @@ class data_module():
                                  num_workers=2)
         return test_loader
 
-    def predict_combined_loader(self, preds: dict | None = None):
+    def predict_combined_loader(self):
         """
-            Either generates a prediction step dataloader
-            from the sequence datasets of the get_dm class
-            or from preds, a dictionary with station ids and 
-            dataframes with weather data.
+        Generates a prediction step dataloader
+        from the sequence datasets of the data_module 
+        class, a dictionary with station ids and 
+        dataframes with weather data.
         """
         pred_loaders = {}
-        if preds:
-            datasets = self.gen_sequence_datasets(preds)
-        else:
-            datasets = self.sequence_datasets
+        datasets = self.sequence_datasets
         for s, _df in datasets.items():
             pred_loaders[s] = _df
         return CombinedLoader(pred_loaders, 'sequential') # try max_size_cycle

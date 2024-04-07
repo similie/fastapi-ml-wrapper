@@ -56,16 +56,15 @@ def plot_predictions(preds: dict, target: str = "precipitation"):
     for s, _df in preds.items():
         _df['station'] = s
         df_list.append(_df)
-
     concat_df = pd.concat(df_list).sort_index()
     ax = sns.lineplot(data=concat_df, 
-                      x = concat_df.index, 
+                      x = concat_df.index.strftime('%B %d, %r'), 
                       y = concat_df[target],
                       hue=concat_df['station'], palette='viridis',
                       legend='full', 
                       lw=3)
     ax.xaxis.set_major_locator(ticker.AutoLocator())
-    ax.set(ylim=(-.01, 1))
+    ax.set(ylim=(-.1, .8))
     plt.legend(bbox_to_anchor=(1, 1))
     plt.ylabel('rainfall (mm)')
     plt.xlabel('month-day-hour')

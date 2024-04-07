@@ -1,12 +1,12 @@
 import os
 import torch
 import pandas as pd
+import pytorch_lightning as pl
 
 # model imports
 from from_pretrained import forecaster_from_pretrained
 from layers.model import Forecaster
 from dataset import data_module
-import pytorch_lightning as pl
 
 def _predict(
         data: dict[str, pd.DataFrame],
@@ -19,7 +19,8 @@ def _predict(
     """
 
     model = forecaster_from_pretrained(checkpoint_path)
-    dm = data_module(data) 
+    dm = data_module(data,
+                     target=['precipitation']) 
     dm.setup(stage="predict")
     trainer = pl.Trainer(default_root_dir="results",
                             enable_checkpointing=False,
@@ -27,6 +28,12 @@ def _predict(
                             devices=1)
      
     return generate_predictions(model, trainer, dm)
+
+def iterate_stations(preds: dict[str, pd.DataFrame],
+                    result: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
+    for s, _df in preds.items():
+        result[s] = pd.concat([result[s], _df])
+    return result
 
 def generate_predictions(model: pl.LightningModule, 
                             trainer: pl.Trainer, 
@@ -37,13 +44,15 @@ def generate_predictions(model: pl.LightningModule,
     Generates 6 x 12-hour predictions
     station by station.
     """
-    loader = dm.predict_combined_loader()
+    loader = dm.predict_dataloader
     predictions = trainer.predict(model, loader)
     result = dm.process_preds(predictions)
     for i in range(5):
-        predictions = trainer.predict(model, 
-                                      dm.predict_combined_loader(preds=preds))
-        preds = dm.process_preds(predictions)
-        for s, _df in preds.items():
-            result[s] = pd.concat([result[s], _df])
-    return result
+        pdm = data_module(result, 
+                          target=['precipitation'])
+        pdm.setup(stage="predict")
+        preds = trainer.predict(model, 
+                                dm.predict_dataloader)
+        predictions = dm.process_preds(preds)
+        res = iterate_stations(predictions, result)
+    return res

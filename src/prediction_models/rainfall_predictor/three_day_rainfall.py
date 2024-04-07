@@ -1,5 +1,5 @@
 import sys
-from os import path, getcwd
+from os import path
 import json
 
 from predict import _predict
@@ -7,7 +7,6 @@ from dataset import data_module
 from mutils import get_checkpoint_filepath, plot_predictions
 
 from from_pretrained import forecaster_from_pretrained
-# sys.path.append( path.dirname( path.abspath(__file__) ) )
 from AllWeatherConfig import getAllWeatherConfig
 from AllWeatherCubeResponse import AllWeatherCubeQueryResponse
 from AllWeatherCubeResponse import cleanCubeNameFromResponseKeys
@@ -41,7 +40,3 @@ if __name__ == "__main__":
     plot_predictions(predictions)
     
 # pdf saved to the results folder root
-
-
-
-

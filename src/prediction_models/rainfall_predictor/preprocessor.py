@@ -1,11 +1,17 @@
-
 import json
 import pandas as pd
 import numpy as np
 
-from tqdm.auto import tqdm
+from scipy.stats import zscore
+from sklearn.impute import SimpleImputer
 
-cols = [
+from tqdm.auto import tqdm
+"""
+Needed for imports from
+from json and csv without
+pydantic validation.    
+"""
+cols = [ 
     "station",
     "date",
     "precipitation",
@@ -31,11 +37,9 @@ type_dict = {
 def load_data_csv(data_dir: str,
                     cols: list[str] = cols,
                     type_dict: dict = type_dict):
-
     with open(data_dir) as f:
         lines_number = sum(1 for _ in f)
         f.close()
-        
     df = pd.concat(
         [
             chunk
@@ -46,25 +50,27 @@ def load_data_csv(data_dir: str,
                     dtype=type_dict,
                     skipinitialspace=True,
                     chunksize=1000,
-                
                 ),
                 desc="Loading CSV data",
                 total=lines_number // 1000 + 1,    
             )
         ]
     )
-    json_lst = []
-    for i in range(len(df)): 
-        d = json.loads(df.iloc[i, :].to_json())
-        json_lst.append(d)
-    return json_lst
+    df = df[df.station != '27']
+    return df
 
-def load_dataframe(json_list: list[str]) -> dict:
-    df = pd.json_normalize(json_list)
+def load_dataframe(df: pd.DataFrame, json=True) -> dict:
+    if json:
+        df = pd.json_normalize(df)
     df = df[cols].copy()
-    df = duplicate_datetime(df.copy())        
+    df = duplicate_datetime(df.copy())
     df = set_dt_index(df.copy())
-    return {s: _df.drop('station', axis=1) for s, _df in df.groupby('station')} 
+    df = df[(df.index.year.isin([2022, 2023]))].copy()
+    df = negatives(df)
+    df = outliers(df)
+    df = impute_vals(df)
+    return {s: _df.drop('station', axis=1) 
+        for s, _df in df.groupby('station')}
     
 def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
     df.set_index("date", inplace=True)
@@ -87,5 +93,17 @@ def negatives(X: pd.DataFrame) -> pd.DataFrame:
     num_cols = X.select_dtypes(include=np.number).columns.to_list()
     mask = X[num_cols] < 0
     X[mask] = np.nan
-    X = X.dropna()
+    return X
+
+def outliers(X: pd.DataFrame) -> pd.DataFrame:
+    num_cols = X.select_dtypes(include=np.number).columns.to_list()
+    mask = X[num_cols] > X[num_cols].quantile(0.9999)
+    X[mask] = np.nan
+    return X
+
+def impute_vals(X: pd.DataFrame) -> pd.DataFrame:
+    num_cols = X.select_dtypes(include=np.number).columns.to_list()
+    other = X.select_dtypes(exclude=np.number).columns.to_list()
+    imputer = SimpleImputer(missing_values=np.NaN)
+    X[num_cols] = imputer.fit_transform(X[num_cols].values)
     return X

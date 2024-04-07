@@ -1,4 +1,3 @@
-import os
 import numpy as np
 ## PyTorch
 import torch
@@ -97,7 +96,7 @@ class Autoencoder(pl.LightningModule):
         self.encoder = encoder_class(input_size, latent_dim, dropout)
         self.decoder = decoder_class(latent_dim, output_size, dropout)
         # Example input array needed for visualizing the graph of the network
-        self.test_input = [torch.randn(batch_size, 12, output_size), torch.randn(batch_size, 12, output_size)] 
+        self.test_input = [torch.randn(batch_size, 12, input_size), torch.randn(batch_size, 12, output_size)] 
                
     def forward(self, x):
         z = self.encoder(x)
@@ -117,7 +116,7 @@ class Autoencoder(pl.LightningModule):
     def configure_optimizers(self):
         return optim.AdamW(self.parameters(), lr=1e-3, weight_decay=0.01)
                                                           
-    def training_step(self, batch, batch_idx, dataloader_idx=0):
+    def training_step(self, batch, batch_idx, dataloader_idx=0): 
         loss = self._reconstruction_loss(batch)
         self.log('train_loss', loss)
         return loss
@@ -194,17 +193,20 @@ class Forecaster(pl.LightningModule):
     
     def training_step(self, batch):
         inputs, target = batch
-        loss = self.loss_function(inputs, target)
+        yhat = self(inputs)
+        loss = self.loss_function(yhat, target)
         self.log('train_loss', loss)
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
         inputs, target = batch
-        loss = self.loss_function(inputs, target)
+        yhat = self(inputs)
+        loss = self.loss_function(yhat, target)
         self.log('val_loss', loss)
 
     def test_step(self, batch, batch_idx, dataloader_idx=0):
         inputs, target = batch
-        loss = self.loss_function(inputs, target)
+        yhat = self(inputs)
+        loss = self.loss_function(yhat, target)
         self.log('test_loss', loss)
 
     def predict_step(self, batch, batch_idx, dataloader_idx=0):

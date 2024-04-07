@@ -1,7 +1,0 @@
-batch_size: 1
-decoder_class: !!python/name:layers.model.Decoder ''
-dropout: 0.7
-encoder_class: !!python/name:layers.model.Encoder ''
-input_size: 7
-latent_dim: 256
-output_size: 7
