@@ -58,7 +58,7 @@ class SequenceDataset(Dataset):
             indexes = list(range(idx, idx + self.sequence_length))
             x = self.X.iloc[indexes, :].values
             y = self.Y.iloc[indexes, :].values
-        return torch.tensor(x).float(), torch.tensor(y).float()
+        return torch.tensor(y).float(), torch.tensor(x).float()
 
     def pad_df(self, idx):
         g = self.gap(idx)            

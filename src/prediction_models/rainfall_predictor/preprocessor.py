@@ -2,7 +2,6 @@ import json
 import pandas as pd
 import numpy as np
 
-from scipy.stats import zscore
 from sklearn.impute import SimpleImputer
 
 from tqdm.auto import tqdm
@@ -11,6 +10,7 @@ Needed for imports from
 from json and csv without
 pydantic validation.    
 """
+
 cols = [ 
     "station",
     "date",
