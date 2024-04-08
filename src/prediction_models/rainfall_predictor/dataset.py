@@ -58,7 +58,7 @@ class SequenceDataset(Dataset):
             indexes = list(range(idx, idx + self.sequence_length))
             x = self.X.iloc[indexes, :].values
             y = self.Y.iloc[indexes, :].values
-        return torch.tensor(y).float(), torch.tensor(x).float()
+        return torch.tensor(x).float(), torch.tensor(y).float()
 
     def pad_df(self, idx):
         g = self.gap(idx)            
@@ -96,7 +96,7 @@ class data_module():
                  batch_size: int = 1,
                  target: list | None = None):
         self.batch_size = batch_size
-        self.data = load_dataframe(data, json=False) # toggle to True for predictions
+        self.data = load_dataframe(data, json=True) # toggle to True for predictions
         self.features = features
         self.target = target
         self.transforms = [RobustScaler(), 
@@ -189,7 +189,7 @@ class data_module():
                                  num_workers=2)
         return test_loader
 
-    def predict_combined_loader(self):
+    def predict_combined_loader(self, preds=None):
         """
         Generates a prediction step dataloader
         from the sequence datasets of the data_module 
@@ -197,10 +197,18 @@ class data_module():
         dataframes with weather data.
         """
         pred_loaders = {}
-        datasets = self.sequence_datasets
+        if preds:
+            datasets = self.gen_sequence_datasets(preds, target=['precipitation'])
+        else:
+            datasets = self.sequence_datasets
         for s, _df in datasets.items():
             pred_loaders[s] = _df
         return CombinedLoader(pred_loaders, 'sequential') # try max_size_cycle
+        # pred_loaders = {}
+        # datasets = self.sequence_datasets
+        # for s, _df in datasets.items():
+        #     pred_loaders[s] = _df
+        # return CombinedLoader(pred_loaders, 'sequential') # try max_size_cycle
         
     def train_combined_loader(self):
         train_sets = []

@@ -33,7 +33,7 @@ def loadJsonFixture():
 
 if __name__ == "__main__":
 
-    check_path = get_checkpoint_filepath(latent_dim=256)
+    check_path = get_checkpoint_filepath(latent_dim=64)
     data = serialise_ml_data()
     weather_data = data.model_dump(by_alias=True)['data']
     predictions = _predict(weather_data, check_path)

@@ -64,8 +64,9 @@ def plot_predictions(preds: dict, target: str = "precipitation"):
                       legend='full', 
                       lw=3)
     ax.xaxis.set_major_locator(ticker.AutoLocator())
-    ax.set(ylim=(-.1, .8))
+    ax.set(ylim=(-.1, 10))
     plt.legend(bbox_to_anchor=(1, 1))
+    plt.xticks(rotation=45)
     plt.ylabel('rainfall (mm)')
     plt.xlabel('month-day-hour')
     filename = f"./results/predictions{int(time())}.pdf"

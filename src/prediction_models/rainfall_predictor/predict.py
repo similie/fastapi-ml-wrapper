@@ -47,12 +47,18 @@ def generate_predictions(model: pl.LightningModule,
     loader = dm.predict_dataloader
     predictions = trainer.predict(model, loader)
     result = dm.process_preds(predictions)
-    for i in range(5):
-        pdm = data_module(result, 
-                          target=['precipitation'])
-        pdm.setup(stage="predict")
-        preds = trainer.predict(model, 
-                                dm.predict_dataloader)
-        predictions = dm.process_preds(preds)
-        res = iterate_stations(predictions, result)
-    return res
+    for i in range(25):
+        predictions = trainer.predict(model, 
+                                      dm.predict_combined_loader(preds=preds))
+        preds = dm.process_preds(predictions)
+        for s, _df in preds.items():
+            result[s] = pd.concat([result[s], _df])
+    return result
+    #     predictions = dm.predict_combined_loader(result, 
+    #                       target=['precipitation'])
+    #     #pdm.setup(stage="predict")
+    #     preds = trainer.predict(model, 
+    #                             dm.predict_dataloader)
+    #     predictions = dm.process_preds(preds)
+    #     res = iterate_stations(predictions, result)
+    # return res
