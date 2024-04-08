@@ -27,22 +27,16 @@ def get_checkpoint_filepath(model_prefix: str = "FC",
                     "version_0/checkpoints",
                     filename)  
 
-def plot_loss(model_dict, check_pt_path):
-    latent_dims = sorted([k for k in model_dict])
-    # THIS NEEDS FIXING: test: test_loss/dataloader_idx
-    val_scores = [model_dict[k]["result"]["val"][0]["test_loss"] for k in latent_dims]
-
-    fig = plt.figure(figsize=(6,4))
-    plt.plot(latent_dims, val_scores, '--', color="#000", marker="*", markeredgecolor="#000", markerfacecolor="y", markersize=16)
-    plt.xscale("log")
-    plt.xticks(latent_dims, labels=latent_dims)
-    plt.title("Reconstruction error over latent dimensionality", fontsize=12)
-    plt.xlabel("Latent dimensionality")
-    plt.ylabel("Reconstruction error")
-    plt.minorticks_off()
-    plt.ylim(0,100)
-    # plt.savefig(check_pt_path + 'loss.pdf')
-    plt.show()
+def plot_loss(check_pt_path):
+    df = pd.read_csv(check_pt_path)
+    sns.set_style('darkgrid')
+    sns.set(rc={'figure.figsize':(14,8)})
+    ax = sns.lineplot(data=df, 
+                      x = df.step % 1000,
+                      y = df.iloc[:,2],
+                      legend='full', 
+                      lw=3)
+    plt.savefig('results/' + 'trainloss.pdf')
 
 def plot_predictions(preds: dict, target: str = "precipitation"):
     """

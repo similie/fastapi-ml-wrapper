@@ -59,13 +59,13 @@ def load_data_csv(data_dir: str,
     df = df[df.station != '27']
     return df
 
-def load_dataframe(df: pd.DataFrame, json=True) -> dict:
+def load_dataframe(df: pd.DataFrame, json=False) -> dict:
     if json:
         df = pd.json_normalize(df)
-    df = df[cols].copy()
+    df = df.reindex(columns=cols)
     df = duplicate_datetime(df.copy())
     df = set_dt_index(df.copy())
-    # df = df[(df.index.year.isin([2022, 2023]))].copy()
+    df = df[(df.index.year.isin([2022, 2023]))].copy()
     df = negatives(df)
     df = outliers(df)
     df = impute_vals(df)
@@ -104,6 +104,6 @@ def outliers(X: pd.DataFrame) -> pd.DataFrame:
 def impute_vals(X: pd.DataFrame) -> pd.DataFrame:
     num_cols = X.select_dtypes(include=np.number).columns.to_list()
     other = X.select_dtypes(exclude=np.number).columns.to_list()
-    imputer = SimpleImputer(missing_values=np.NaN)
+    imputer = SimpleImputer(missing_values=np.nan)
     X[num_cols] = imputer.fit_transform(X[num_cols].values)
     return X

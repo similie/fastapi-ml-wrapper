@@ -43,10 +43,10 @@ class SequenceDataset(Dataset):
         if self.target == None:
             self.target = self.features
             
-        self.X = self.dataframe[self.features] 
+        self.X = self.dataframe[self.features][:-self.prediction_window]
         self.Y = self.dataframe[self.target].shift(
             periods=-self.prediction_window,
-            freq='h')
+            freq='h')[:-self.prediction_window]
 
     def __len__(self):
         return len(self.dataframe)
@@ -58,19 +58,11 @@ class SequenceDataset(Dataset):
             indexes = list(range(idx, idx + self.sequence_length))
             x = self.X.iloc[indexes, :].values
             y = self.Y.iloc[indexes, :].values
-        return torch.tensor(x).float(), torch.tensor(y).float()
+        return torch.tensor(y).float(), torch.tensor(x).float()
 
     def pad_df(self, idx):
         g = self.gap(idx)            
         indexes = list(range(idx, len(self.dataframe)))
-        return self.to_pad(indexes, g)
-
-    def gap(self, idx: int) -> int:
-        return idx+self.sequence_length - len(self.dataframe)
-
-    def to_pad(self, 
-               indexes: list, 
-                gap: int) -> tuple[np.ndarray, np.ndarray]:
         x_to_pad = self.X.iloc[indexes, :]
         y_to_pad = self.Y.iloc[indexes, :]
         xpad = pd.concat([x_to_pad.iloc[:,0]]*gap).reset_index(drop=True)
@@ -78,6 +70,20 @@ class SequenceDataset(Dataset):
         x = pd.concat([x_to_pad, xpad]).reset_index(drop=True).values
         y = pd.concat([y_to_pad, ypad]).reset_index(drop=True).values
         return x, y
+
+    def gap(self, idx: int) -> int:
+        return idx+self.sequence_length - len(self.dataframe)
+
+    # def to_pad(self, 
+    #            indexes: list, 
+    #             gap: int) -> tuple[np.ndarray, np.ndarray]:
+    #     x_to_pad = self.X.iloc[indexes, :]
+    #     y_to_pad = self.Y.iloc[indexes, :]
+    #     xpad = pd.concat([x_to_pad.iloc[:,0]]*gap).reset_index(drop=True)
+    #     ypad = pd.concat([y_to_pad.iloc[:,0]]*gap).reset_index(drop=True)
+    #     x = pd.concat([x_to_pad, xpad]).reset_index(drop=True).values
+    #     y = pd.concat([y_to_pad, ypad]).reset_index(drop=True).values
+    #     return x, y
                  
 class data_module():
     """
@@ -96,7 +102,7 @@ class data_module():
                  batch_size: int = 1,
                  target: list | None = None):
         self.batch_size = batch_size
-        self.data = load_dataframe(data, json=True) # toggle to True for predictions
+        self.data = load_dataframe(data, json=False) # toggle to True for predictions
         self.features = features
         self.target = target
         self.transforms = [RobustScaler(), 
@@ -126,7 +132,7 @@ class data_module():
     def truncate_prediction_sequences(self, preds: list) -> list:
         return [l[-12:][0].squeeze(0) for l in preds]
 
-    def generate_datetime_index(self, start_time, periods=12):
+    def generate_datetime_index(self, start_time, periods=11):
         return pd.date_range(start=start_time, freq='h', periods=periods)
     
     def inverse_transform_pipeline(self, 
