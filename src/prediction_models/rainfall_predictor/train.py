@@ -54,7 +54,7 @@ def _train(prefix_str: str = "AE",
     if prefix_str == "AE":
         model = Autoencoder(input_size=7, 
                         latent_dim=latent_dim,
-                        dropout=0.7,
+                        dropout=0.5,
                         output_size=7,
                         batch_size=1,)
     elif prefix_str == "FC":

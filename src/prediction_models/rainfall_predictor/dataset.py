@@ -103,7 +103,7 @@ class data_module():
         self.data = load_dataframe(data)
         self.features = features
         self.target = target
-        self.transforms = [StandardScaler(), 
+        self.transforms = [RobustScaler(), 
             QuantileTransformer(n_quantiles=50)]
         self.frames = self.frame_scale(self.data)
         self.sequence_datasets = self.gen_sequence_datasets(self.frames, 

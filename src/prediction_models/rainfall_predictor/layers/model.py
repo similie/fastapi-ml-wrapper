@@ -12,7 +12,7 @@ class Encoder(nn.Module):
                  input_size : int,
                  latent_dim : int,
                  dropout: float,
-                 act_fn : object = nn.GELU):
+                 act_fn : object = nn.Tanh):
         """
         Inputs:
             - input_size : number of features
@@ -33,10 +33,10 @@ class Encoder(nn.Module):
     def forward(self, x):
         # Initialize hidden state with zeros
         h0 = torch.empty(2, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('selu'))
         # Initialize cell state
         c0 = torch.empty(2, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('selu'))
 
         x, (h1, c1) = self.lstm(x, (h0, c0))
         return x
@@ -47,7 +47,7 @@ class Decoder(nn.Module):
                  latent_dim : int,
                  output_size: int,
                  dropout: float,
-                 act_fn : object = nn.GELU):
+                 act_fn : object = nn.Tanh):
         """
         Inputs:
             - latent_dim : Dimensionality of latent representation z
@@ -67,10 +67,10 @@ class Decoder(nn.Module):
 
     def forward(self, x):
         h0 = torch.empty(2, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('selu'))
         # Initialize cell state
         c0 = torch.empty(2, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('selu'))
         x, (c1, h1) = self.lstm(x, (c0, h0))
         x = self.linear(x)
         return x
@@ -138,7 +138,7 @@ class Forecaster(pl.LightningModule):
                  latent_dim : int,
                  dropout : float,
                  ae_checkpoint_path : str,
-                 act_fn : object = nn.GELU,
+                 act_fn : object = nn.Tanh,
                  autoencoder_class : object = Autoencoder):
         """
             Inputs:
@@ -171,16 +171,16 @@ class Forecaster(pl.LightningModule):
         # Initialize hidden state with zeros
         if self.training == False:
             h0 = torch.empty(2, x.size(0), self.latent_dim)
-            nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('relu'))
+            nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('selu'))
             # Initialize cell state
             c0 = torch.empty(2, x.size(0), self.latent_dim)
-            nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('relu'))
+            nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('selu'))
         else:
             h0 = torch.empty(2, x.size(0), self.latent_dim)
-            nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('relu'))
+            nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('selu'))
             # Initialize cell state
             c0 = torch.empty(2, x.size(0), self.latent_dim)
-            nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('relu'))
+            nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('selu'))
         y, (_, _) = self.autoencoder.encoder.lstm(x)
         x = torch.cat((x, y), dim=-1)
         x, (h1, c1) = self.lstm(x, (h0, c0))
