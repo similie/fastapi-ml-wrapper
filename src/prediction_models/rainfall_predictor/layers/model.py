@@ -33,10 +33,12 @@ class Encoder(nn.Module):
     def forward(self, x):
         # Initialize hidden state with zeros
         h0 = torch.empty(2, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('selu'))
+        nn.init.xavier_uniform_(h0, 
+                gain=nn.init.calculate_gain(nonlinearity='linear'))
         # Initialize cell state
         c0 = torch.empty(2, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('selu'))
+        nn.init.xavier_uniform_(c0, 
+                gain=nn.init.calculate_gain(nonlinearity='linear'))
 
         x, (h1, c1) = self.lstm(x, (h0, c0))
         return x
@@ -67,10 +69,12 @@ class Decoder(nn.Module):
 
     def forward(self, x):
         h0 = torch.empty(2, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('selu'))
+        nn.init.xavier_uniform_(h0, 
+            gain=nn.init.calculate_gain(nonlinearity='linear'))
         # Initialize cell state
         c0 = torch.empty(2, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('selu'))
+        nn.init.xavier_uniform_(c0, 
+            gain=nn.init.calculate_gain(nonlinearity='linear'))
         x, (c1, h1) = self.lstm(x, (c0, h0))
         x = self.linear(x)
         return x
@@ -114,7 +118,7 @@ class Autoencoder(pl.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        return optim.AdamW(self.parameters(), lr=1e-3, weight_decay=0.01)
+        return optim.AdamW(self.parameters(), lr=1e-2, weight_decay=0.01)
                                                           
     def training_step(self, batch, batch_idx, dataloader_idx=0): 
         loss = self._reconstruction_loss(batch)
@@ -168,19 +172,14 @@ class Forecaster(pl.LightningModule):
         self.linear_out = nn.Linear(self.latent_dim//4, 1)
         
     def forward(self, x):
-        # Initialize hidden state with zeros
-        if self.training == False:
-            h0 = torch.empty(2, x.size(0), self.latent_dim)
-            nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('selu'))
-            # Initialize cell state
-            c0 = torch.empty(2, x.size(0), self.latent_dim)
-            nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('selu'))
-        else:
-            h0 = torch.empty(2, x.size(0), self.latent_dim)
-            nn.init.xavier_uniform_(h0, gain=nn.init.calculate_gain('selu'))
-            # Initialize cell state
-            c0 = torch.empty(2, x.size(0), self.latent_dim)
-            nn.init.xavier_uniform_(c0, gain=nn.init.calculate_gain('selu'))
+        # Initialize hidden state
+        h0 = torch.empty(2, x.size(0), self.latent_dim)
+        nn.init.xavier_uniform_(h0, 
+                gain=nn.init.calculate_gain(nonlinearity='linear'))
+        # Initialize cell state
+        c0 = torch.empty(2, x.size(0), self.latent_dim)
+        nn.init.xavier_uniform_(c0, 
+                gain=nn.init.calculate_gain(nonlinearity='linear'))
         y, (_, _) = self.autoencoder.encoder.lstm(x)
         x = torch.cat((x, y), dim=-1)
         x, (h1, c1) = self.lstm(x, (h0, c0))
@@ -189,7 +188,7 @@ class Forecaster(pl.LightningModule):
         return self.linear_out(x)
 
     def configure_optimizers(self):
-        return optim.AdamW(self.parameters(), lr=1e-3, weight_decay=0.01)
+        return optim.AdamW(self.parameters(), lr=1e-2, weight_decay=0.01)
     
     def training_step(self, batch):
         inputs, target = batch

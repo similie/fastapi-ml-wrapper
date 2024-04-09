@@ -104,7 +104,7 @@ class data_module():
         self.features = features
         self.target = target
         self.transforms = [RobustScaler(), 
-            QuantileTransformer(n_quantiles=50)]
+            QuantileTransformer(n_quantiles=200)]
         self.frames = self.frame_scale(self.data)
         self.sequence_datasets = self.gen_sequence_datasets(self.frames, 
                                                             self.target)

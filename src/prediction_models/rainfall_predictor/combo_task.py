@@ -9,7 +9,7 @@ of the train.py file.
 """
 
 model_dict = {}
-for latent_dim in [64, 128]: #, 256, 512, 1024]:
+for latent_dim in [64]: #, 256, 512, 1024]:
     model_ld, result_ld = _train(prefix_str="AE",
                                 latent_dim=latent_dim,
                                 epochs=1)
@@ -23,7 +23,7 @@ different latent dimensions. Check
 of the train.py file.
 """
 model_dict = {}
-for latent_dim in [64, 128]: # , 128, 256, 512, 1024]:
+for latent_dim in [64]: # , 128, 256, 512, 1024]:
     model, train_loader = _train(prefix_str="FC",
                                 latent_dim=latent_dim, 
                                 epochs=1)

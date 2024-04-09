@@ -70,7 +70,7 @@ def load_data_csv(data_dir: str,
     df = df[df.station != '27']
     return df
 
-def load_dataframe(df: pd.DataFrame) -> dict:
+def load_dataframe(df: list | pd.DataFrame) -> dict:
     if isinstance(df, list):
         df = pd.DataFrame(df)
     df = df.reindex(columns=cols)
@@ -113,7 +113,7 @@ def negatives(X: pd.DataFrame) -> pd.DataFrame:
 
 def outliers(X: pd.DataFrame) -> pd.DataFrame:
     num_cols = X.select_dtypes(include=np.number).columns.to_list()
-    mask = X[num_cols] > X[num_cols].quantile(0.99999)
+    mask = X[num_cols] > X[num_cols].quantile(0.99)
     X[mask] = np.nan
     return X
 
