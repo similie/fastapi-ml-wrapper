@@ -37,6 +37,6 @@ if __name__ == "__main__":
     data = serialise_ml_data()
     weather_data = data.model_dump(by_alias=True)['data']
     predictions = _predict(weather_data, check_path)
-    # plot_predictions(predictions)
-    print(predictions)
+    plot_predictions(predictions)
+    # print(predictions)
 # pdf saved to the results folder root

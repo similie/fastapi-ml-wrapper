@@ -44,35 +44,33 @@ class SequenceDataset(Dataset):
             self.target = self.features
             
         self.X = self.dataframe[self.features][:-self.prediction_window]
-        self.Y = self.dataframe[self.target].shift(
-            periods=-self.prediction_window,
-            freq='h')[:-self.prediction_window]
+        self.Y = self.dataframe[self.target].shift(-self.prediction_window)[:-self.prediction_window]
 
     def __len__(self):
-        return len(self.dataframe)
+        return len(self.X)
 
     def __getitem__(self, idx):
-        if (idx+self.sequence_length) > len(self.dataframe):
+        if (idx+self.sequence_length) > len(self.X):
             x, y = self.pad_df(idx)
         else:
             indexes = list(range(idx, idx + self.sequence_length))
             x = self.X.iloc[indexes, :].values
             y = self.Y.iloc[indexes, :].values
-        return torch.tensor(y).float(), torch.tensor(x).float()
+        return torch.tensor(x).float(), torch.tensor(y).float()
 
     def pad_df(self, idx):
         g = self.gap(idx)            
-        indexes = list(range(idx, len(self.dataframe)))
+        indexes = list(range(idx, len(self.X)))
         x_to_pad = self.X.iloc[indexes, :]
         y_to_pad = self.Y.iloc[indexes, :]
-        xpad = pd.concat([x_to_pad.iloc[:,0]]*gap).reset_index(drop=True)
-        ypad = pd.concat([y_to_pad.iloc[:,0]]*gap).reset_index(drop=True)
+        xpad = pd.concat([x_to_pad.iloc[:,0]]*g).reset_index(drop=True)
+        ypad = pd.concat([y_to_pad.iloc[:,0]]*g).reset_index(drop=True)
         x = pd.concat([x_to_pad, xpad]).reset_index(drop=True).values
         y = pd.concat([y_to_pad, ypad]).reset_index(drop=True).values
         return x, y
 
     def gap(self, idx: int) -> int:
-        return idx+self.sequence_length - len(self.dataframe)
+        return idx+self.sequence_length - len(self.X)
 
     # def to_pad(self, 
     #            indexes: list, 
@@ -102,11 +100,11 @@ class data_module():
                  batch_size: int = 1,
                  target: list | None = None):
         self.batch_size = batch_size
-        self.data = load_dataframe(data, json=False) # toggle to True for predictions
+        self.data = load_dataframe(data)
         self.features = features
         self.target = target
-        self.transforms = [RobustScaler(), 
-            QuantileTransformer(n_quantiles=200)]
+        self.transforms = [StandardScaler(), 
+            QuantileTransformer(n_quantiles=50)]
         self.frames = self.frame_scale(self.data)
         self.sequence_datasets = self.gen_sequence_datasets(self.frames, 
                                                             self.target)
@@ -132,7 +130,7 @@ class data_module():
     def truncate_prediction_sequences(self, preds: list) -> list:
         return [l[-12:][0].squeeze(0) for l in preds]
 
-    def generate_datetime_index(self, start_time, periods=11):
+    def generate_datetime_index(self, start_time, periods=12):
         return pd.date_range(start=start_time, freq='h', periods=periods)
     
     def inverse_transform_pipeline(self, 
@@ -180,7 +178,7 @@ class data_module():
                                 batch_size=self.batch_size,
                                 drop_last=True,
                                 shuffle=False, 
-                                collate_fn=collate_batch,
+                                # collate_fn=collate_batch,
                                 num_workers=2)
         return val_loader
 
@@ -191,7 +189,7 @@ class data_module():
                                  batch_size=self.batch_size,
                                  drop_last=True,
                                  shuffle=False,
-                                 collate_fn=collate_batch,
+                                 # collate_fn=collate_batch,
                                  num_workers=2)
         return test_loader
 
@@ -223,7 +221,7 @@ class data_module():
         return DataLoader(ConcatDataset(train_sets),
                             batch_size=self.batch_size,
                             shuffle=False,
-                            collate_fn=collate_batch,
+                            # collate_fn=collate_batch,
                             num_workers=2)
 
     def val_combined_loader(self):
@@ -238,9 +236,6 @@ class data_module():
             test_loaders[s] = self.gen_test_loader(_df)
         return CombinedLoader(test_loaders, 'sequential')
 
-def collate_batch(batch):
-    x = [item[-1] for item in batch]
-    x = pad_sequence(x, batch_first=True)
-    y = [item[0] for item in batch]
-    y = pad_sequence(y, batch_first=True)
-    return x, y
+     
+
+

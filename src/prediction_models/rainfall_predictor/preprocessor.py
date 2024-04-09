@@ -11,6 +11,17 @@ from json and csv without
 pydantic validation.    
 """
 
+agg_dict = {
+    "station": "ffill",
+    "precipitation": "sum",
+    "temperature": "mean",
+    "humidity": "mean",
+    "pressure": "mean",
+    "wind_speed": "mean",
+    "wind_direction": "mean",
+    "solar": "mean"
+}
+
 cols = [ 
     "station",
     "date",
@@ -59,15 +70,17 @@ def load_data_csv(data_dir: str,
     df = df[df.station != '27']
     return df
 
-def load_dataframe(df: pd.DataFrame, json=False) -> dict:
-    if json:
-        df = pd.json_normalize(df)
+def load_dataframe(df: pd.DataFrame) -> dict:
+    if isinstance(df, list):
+        df = pd.DataFrame(df)
     df = df.reindex(columns=cols)
+    df['station'] = df.station.astype('str')
     df = duplicate_datetime(df.copy())
     df = set_dt_index(df.copy())
-    df = df[(df.index.year.isin([2022, 2023]))].copy()
+    df = df[(df.index.year.isin([2020, 2021, 2022, 2023, 2024]))].copy()
     df = negatives(df)
     df = outliers(df)
+    df = sample_interp(df, agg_dict)
     df = impute_vals(df)
     return {s: _df.drop('station', axis=1) 
         for s, _df in df.groupby('station')}
@@ -77,13 +90,16 @@ def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def sample_interp(df, agg_dict):
-    df = df.resample('5min').ffill(limit=12)
-    num_cols = df.select_dtypes(include=np.number).columns.to_list()
-    df[num_cols] = df[num_cols].interpolate(method='time', limit=12)
+    df = df.resample('10min').first()
+    # df = df.resample('10min').mean()
+    # num_cols = df.select_dtypes(include=np.number).columns.to_list()
+    # df[num_cols] = df[num_cols].interpolate(method='time', limit=12)
     return df.resample('h').agg(agg_dict)
 
 def duplicate_datetime(df: pd.DataFrame, datetime_col="date") -> pd.DataFrame:
-    df[datetime_col] = pd.to_datetime(df[datetime_col], format='mixed')
+    df[datetime_col] = pd.to_datetime(df[datetime_col], 
+                                        format='mixed',
+                                        utc=True)
     delta = pd.to_timedelta(df.groupby("date").cumcount(), unit="ms")
     df.date = df.date + delta.values
     df.sort_values("date", inplace=True)
@@ -97,7 +113,7 @@ def negatives(X: pd.DataFrame) -> pd.DataFrame:
 
 def outliers(X: pd.DataFrame) -> pd.DataFrame:
     num_cols = X.select_dtypes(include=np.number).columns.to_list()
-    mask = X[num_cols] > X[num_cols].quantile(0.9999)
+    mask = X[num_cols] > X[num_cols].quantile(0.99999)
     X[mask] = np.nan
     return X
 
