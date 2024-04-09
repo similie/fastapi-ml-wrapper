@@ -90,7 +90,7 @@ def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def sample_interp(df, agg_dict):
-    df = df.resample('10min').first()
+    df = df.resample('5min').first()
     # df = df.resample('10min').mean()
     # num_cols = df.select_dtypes(include=np.number).columns.to_list()
     # df[num_cols] = df[num_cols].interpolate(method='time', limit=12)
@@ -113,7 +113,7 @@ def negatives(X: pd.DataFrame) -> pd.DataFrame:
 
 def outliers(X: pd.DataFrame) -> pd.DataFrame:
     num_cols = X.select_dtypes(include=np.number).columns.to_list()
-    mask = X[num_cols] > X[num_cols].quantile(0.99)
+    mask = X[num_cols] > X[num_cols].quantile(0.9999)
     X[mask] = np.nan
     return X
 
