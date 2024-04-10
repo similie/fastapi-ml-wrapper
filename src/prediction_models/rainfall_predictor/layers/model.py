@@ -8,18 +8,19 @@ import torch.optim as optim
 import pytorch_lightning as pl
 
 class Encoder(nn.Module):
+    """
+    Inputs:
+        - input_size : number of features
+        - latent_dim : Dimensionality of latent representation z
+        - dropout : layer normalization
+        - act_fn : Activation function used throughout the encoder network
+    """
     def __init__(self,
                  input_size : int,
                  latent_dim : int,
                  dropout: float,
-                 act_fn : object = nn.GELU):
-        """
-        Inputs:
-            - input_size : number of features
-            - latent_dim : Dimensionality of latent representation z
-            - dropout : layer normalization
-            - act_fn : Activation function used throughout the encoder network
-        """
+                 act_fn : object = nn.Tanh):
+        
         super().__init__()
         self.latent_dim = latent_dim
         self.lstm = nn.LSTM(input_size=input_size, 
@@ -29,16 +30,12 @@ class Encoder(nn.Module):
             bidirectional=False, 
             batch_first=True)
         act_fn()
-        
+ 
     def forward(self, x):
         # Initialize hidden state with zeros
         h0 = torch.empty(2, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(h0, 
-                gain=nn.init.calculate_gain('relu'))
         # Initialize cell state
         c0 = torch.empty(2, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(c0, 
-                gain=nn.init.calculate_gain('relu'))
 
         x, (h1, c1) = self.lstm(x, (h0, c0))
         return x
@@ -49,7 +46,7 @@ class Decoder(nn.Module):
                  latent_dim : int,
                  output_size: int,
                  dropout: float,
-                 act_fn : object = nn.GELU):
+                 act_fn : object = nn.Tanh):
         """
         Inputs:
             - latent_dim : Dimensionality of latent representation z
@@ -69,12 +66,8 @@ class Decoder(nn.Module):
 
     def forward(self, x):
         h0 = torch.empty(2, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(h0, 
-            gain=nn.init.calculate_gain('relu'))
         # Initialize cell state
         c0 = torch.empty(2, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(c0, 
-            gain=nn.init.calculate_gain('relu'))
         x, (c1, h1) = self.lstm(x, (c0, h0))
         x = self.linear(x)
         return x
@@ -101,7 +94,27 @@ class Autoencoder(pl.LightningModule):
         self.decoder = decoder_class(latent_dim, output_size, dropout)
         # Example input array needed for visualizing the graph of the network
         self.test_input = [torch.randn(batch_size, 12, input_size), torch.randn(batch_size, 12, output_size)] 
-               
+
+        self.init_weights()
+
+    def init_weights(self):
+        """
+        Reproduce Keras default init
+        """
+        ih = (param.data for name, param in self.named_parameters() if 'weight_ih' in name)
+        hh = (param.data for name, param in self.named_parameters() if 'weight_hh' in name)
+        b = (param.data for name, param in self.named_parameters() if 'bias' in name)
+        for t in ih:
+            nn.init.xavier_uniform_(t,
+                gain=nn.init.calculate_gain(nonlinearity='linear'))
+        for t in hh:
+            nn.init.orthogonal_(t)
+        for t in b:
+            nn.init.constant_(t, 0)
+        
+        nn.init.xavier_uniform_(self.decoder.linear.weight,
+            nn.init.calculate_gain(nonlinearity='linear'))
+
     def forward(self, x):
         z = self.encoder(x)
         x_hat = self.decoder(z)
@@ -143,7 +156,7 @@ class Forecaster(pl.LightningModule):
                  dropout : float,
                  output_size: int,
                  ae_checkpoint_path : str,
-                 act_fn : object = nn.GELU,
+                 act_fn : object = nn.Tanh,
                  autoencoder_class : object = Autoencoder):
         """
             Inputs:
@@ -164,7 +177,7 @@ class Forecaster(pl.LightningModule):
             hidden_size=latent_dim, 
             num_layers=2,
             dropout=dropout,
-            bidirectional=True, 
+            bidirectional=False, 
             batch_first=True)
         act_fn()
         self.linear = nn.Linear(self.latent_dim, self.latent_dim//2)
@@ -172,16 +185,35 @@ class Forecaster(pl.LightningModule):
         self.linear1 = nn.Linear(self.latent_dim//2, self.latent_dim//4)
         act_fn()
         self.linear_out = nn.Linear(self.latent_dim//4, self.output_size)
+
+    def init_weights(self):
+        """
+        Reproduce Keras default init
+        """
+        ih = (param.data for name, param in self.lstm.named_parameters() if 'weight_ih' in name)
+        hh = (param.data for name, param in self.lstm.named_parameters() if 'weight_hh' in name)
+        b = (param.data for name, param in self.lstm.named_parameters() if 'bias' in name)
+        for t in ih:
+            nn.init.xavier_uniform_(t,
+                gain=nn.init.calculate_gain(nonlinearity='linear'))
+        for t in hh:
+            nn.init.orthogonal_(t)
+        for t in b:
+            nn.init.constant_(t, 0)
         
+        nn.init.xavier_uniform_(self.linear.weight,
+            nn.init.calculate_gain(nonlinearity='linear'))
+        nn.init.xavier_uniform_(self.linear1.weight,
+            nn.init.calculate_gain(nonlinearity='linear'))
+        nn.init.xavier_uniform_(self.linear_out.weight,
+            nn.init.calculate_gain(nonlinearity='linear'))
+
     def forward(self, x):
         # Initialize hidden state
-        h0 = torch.empty(4, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(h0, 
-                gain=nn.init.calculate_gain('relu'))
+        h0 = torch.empty(2, x.size(0), self.latent_dim)
         # Initialize cell state
-        c0 = torch.empty(4, x.size(0), self.latent_dim)
-        nn.init.xavier_uniform_(c0, 
-                gain=nn.init.calculate_gain('relu'))
+        c0 = torch.empty(2, x.size(0), self.latent_dim)
+
         y, (_, _) = self.autoencoder.encoder.lstm(x)
         x = torch.cat((x, y), dim=-1)
         x, (h1, c1) = self.lstm(x, (h0, c0))

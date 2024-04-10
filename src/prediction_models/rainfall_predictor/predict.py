@@ -14,7 +14,7 @@ def _predict(
         ) -> dict[str, pd.DataFrame]:
     """
     Returns a dict with station numbers as keys and dataframes 
-    of hourly weather station predictions. Returns a 3-day 
+    of hourly weather station predictions--a 3-day 
     forecast of precipitation.
     """
 

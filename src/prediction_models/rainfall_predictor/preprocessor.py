@@ -91,7 +91,7 @@ def load_dataframe(df: list | pd.DataFrame) -> dict:
     df = df.dropna()
     # return df
     return {s: _df.drop('station', axis=1) 
-        for s, _df in df.groupby('station')}
+        for s, _df in df.groupby('station') if len(_df) >= 11}
     
 def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
     df.set_index("date", inplace=True)

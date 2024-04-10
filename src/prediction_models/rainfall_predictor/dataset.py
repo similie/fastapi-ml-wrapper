@@ -231,3 +231,26 @@ def collate_batch(batch):
     xx_pad = pad_sequence(xx, batch_first=True, padding_value=0)
     yy_pad = pad_sequence(yy, batch_first=True, padding_value=0)
     return xx_pad, yy_pad
+
+
+def test_datamodule(df):
+
+    dm = data_module(data=df)
+    dm.setup(stage='fit')
+    train_loader = dm.train_dataloader
+    val_loader = dm.val_dataloader
+    test_loader = dm.test_dataloader
+
+    tr_it = iter(train_loader)
+    ts_it = iter(test_loader)
+    vl_it = iter(val_loader)
+    for it in [tr_it, ts_it, vl_it]:
+        for i, (batch) in enumerate(it):
+            if len(batch) == 2:
+                inputs, target = batch
+                if (torch.isnan(inputs).any() | torch.isnan(inputs).any()):
+                    print("Is nan!")
+            else:
+                inputs, target = batch[0][0], batch[0][1]
+                if (torch.isnan(inputs).any() | torch.isnan(inputs).any()):
+                    print("Is nan!")
