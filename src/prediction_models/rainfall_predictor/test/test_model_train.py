@@ -1,51 +1,31 @@
-from os import path
-# model imports
 from ..layers.model import Autoencoder, Forecaster 
 from ..dataset import data_module
 from ..preprocessor import load_data_csv
 from ..mutils import get_checkpoint_filepath
 # PyTorch Lightning
 import pytorch_lightning as pl
+import torch
+
+from get_test_data import serialise_ml_data
 
 from ...AllWeatherConfig import getAllWeatherConfig
 from ...AllWeatherCubeResponse import AllWeatherCubeQueryResponse
 from ...AllWeatherCubeResponse import cleanCubeNameFromResponseKeys
-
-def serialise_ml_data():
-    jsonData = loadJsonFixture()
-    cubeName = getAllWeatherConfig().cube_name
-    cleanedJson = cleanCubeNameFromResponseKeys(jsonData)
-    jsonData = json.loads(cleanedJson)
-    model = AllWeatherCubeQueryResponse.model_validate(jsonData)
-    return model
-    
-def loadJsonFixture():
-    '''
-    load the sample Json file to the Cube query resonse model format.
-    '''
-    p = path.join('/home/leigh/Code/ekoh/similie/',
-                    'test',
-                    'fixtures', 
-                    'all_weather_cube_query_response.json')
-    with open(p, 'r') as file:
-        jsonData = json.load(file)
-        return json.dumps(jsonData)
-
 
 def test_model_init(prefix_str: str = "AE", 
     latent_dim: int = 64) -> tuple[Autoencoder, dict[str, str]]:
     """
         Test model inits.
     """
+
+    CHECKPOINTPATH = '../pretrained_checkpoints/'
     prefixes = ["FC", "AE"]
     if prefix_str not in prefixes:
         raise ValueError("Invalid prefix. Expected one of: %s" % prefixes)
-    data_path = './test_data/all_weather_cube_query_response.json'
-    df = load_data_csv(data_path)
     if prefix_str == "AE":
-        dm = data_module(data=df)
+        dm = data_module(data=weather_data)
     elif prefix_str == "FC":
-        dm = data_module(data=df, 
+        dm = data_module(data=weather_data, 
                         target=["precipitation"])
         ae_checkpoint_path = get_checkpoint_filepath("AE", 
                                                  latent_dim, 
@@ -66,8 +46,31 @@ def test_model_init(prefix_str: str = "AE",
                         latent_dim=latent_dim,
                         dropout=0.5,
                         ae_checkpoint_path=ae_checkpoint_path)
+    return model
     
 if __name__ == "__main__":
 
-    data = serialise_ml_data()
-    weather_data = data.model_dump(by_alias=True)['data']
+    torch.set_default_dtype(torch.float64)
+    weather_data = serialise_ml_data()
+    model = test_model_init(prefix="AE", latent_dim=64)
+    dm = data_module(weather_data)
+    dm.setup(stage="fit")
+    train_loader = dm.train_dataloader
+    test_loader = dm.test_dataloader
+    val_loader = dm.val_dataloader
+    tr_it = iter(train_loader)
+    ts_it = iter(test_loader)
+    vl_it = iter(val_loader)
+    for it in [tr_it, ts_it, vl_it]:
+        batch = next(it)
+        if len(batch) == 2:
+            inputs, target = batch
+            outputs = model.forward(inputs)
+            print("Nan found in model output: ", 
+                (torch.isnan(outputs).any()))
+        else:
+            inputs, target = batch[0][0], batch[0][1]
+            outputs = model.forward(inputs)
+            print("Nan found in model output:",
+                (torch.isnan(outputs).any()))
+

@@ -2,6 +2,8 @@ import json
 import pandas as pd
 import numpy as np
 
+from AllWeatherConfig import AllWeatherMLConfig
+
 from sklearn.impute import SimpleImputer
 
 from tqdm.auto import tqdm
@@ -10,6 +12,10 @@ Needed for imports from
 from json and csv without
 pydantic validation.    
 """
+
+config = AllWeatherMLConfig()
+cols = ["station", "date"] + config.experiment_config.features
+
 
 agg_dict = {
     "station": "ffill",
@@ -82,6 +88,8 @@ def load_dataframe(df: list | pd.DataFrame) -> dict:
     df = outliers(df)
     df = sample_interp(df, agg_dict)
     df = impute_vals(df)
+    df = df.dropna()
+    # return df
     return {s: _df.drop('station', axis=1) 
         for s, _df in df.groupby('station')}
     
@@ -90,10 +98,7 @@ def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def sample_interp(df, agg_dict):
-    df = df.resample('5min').first()
-    # df = df.resample('10min').mean()
-    # num_cols = df.select_dtypes(include=np.number).columns.to_list()
-    # df[num_cols] = df[num_cols].interpolate(method='time', limit=12)
+    df = df.resample('15min').first()
     return df.resample('h').agg(agg_dict)
 
 def duplicate_datetime(df: pd.DataFrame, datetime_col="date") -> pd.DataFrame:
@@ -113,7 +118,7 @@ def negatives(X: pd.DataFrame) -> pd.DataFrame:
 
 def outliers(X: pd.DataFrame) -> pd.DataFrame:
     num_cols = X.select_dtypes(include=np.number).columns.to_list()
-    mask = X[num_cols] > X[num_cols].quantile(0.9999)
+    mask = X[num_cols] > X[num_cols].quantile(0.999)
     X[mask] = np.nan
     return X
 

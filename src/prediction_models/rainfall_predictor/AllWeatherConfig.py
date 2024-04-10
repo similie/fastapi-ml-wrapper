@@ -16,16 +16,17 @@ class ExperimentConfig(BaseSettings):
     Experiments config settings, with .env namespace aliases
     '''
     model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='experiment_')
-    target_col: str
+    target: list[str]
     features: list[str]
     prediction_window: int = 12
+    sequence_length: int = 12
+    data_path: str
 
 class LstmConfig(BaseSettings):
     '''
     LSTM config settings, with .env namespace aliases
     '''
     model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='lstm_')
-    check_path: str
     prefix: str
     input_size: int
     latent_dim: int
@@ -49,7 +50,7 @@ class AllWeatherMLConfig(BaseSettings):
     experiment_config: ExperimentConfig = ExperimentConfig()
     lstm_config: LstmConfig = LstmConfig()
     trainer_config: TrainerConfig = TrainerConfig()
-    checkpoint_path: str = 'src/prediction_models/rainfall_predictor/project/checkpoints/'
+    checkpoint_path: str = './pretrained_checkpoints/'
 
 @lru_cache
 def getAllWeatherConfig():

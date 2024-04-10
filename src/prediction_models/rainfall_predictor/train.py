@@ -4,14 +4,15 @@ from layers.model import Autoencoder, Forecaster
 from dataset import data_module
 from preprocessor import load_data_csv
 from mutils import get_checkpoint_filepath
+
+from AllWeatherConfig import AllWeatherMLConfig
+
 # PyTorch Lightning
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers.csv_logs import CSVLogger
 
-def _train(prefix_str: str = "AE", 
-    latent_dim: int = 64, 
-    epochs: int = 3) -> tuple[Autoencoder, dict[str, str]]:
+def _train(config: AllWeatherMLConfig) -> tuple[Autoencoder, dict[str, str]]:
     """
     Train the Autoencoder. Checkpoints are saved in the results
     folder. Args: - prefix_str: FC or AE
@@ -19,18 +20,32 @@ def _train(prefix_str: str = "AE",
                   - epochs: max epochs ( due to the seperation 
                   of station data, we cannot use early stopping )
     """
+    # from the dotENV file
+    lstm_config = config.lstm_config
+    experiment_config = config.experiment_config
+    trainer_config = config.trainer_config
+    prefix_str = lstm_config.prefix
+    latent_dim = lstm_config.latent_dim
+    input_size = lstm_config.input_size
+    output_size = lstm_config.output_size
+    dropout = lstm_config.dropout
+    accelerator = trainer_config.accelerator
+    root_dir = trainer_config.default_root_dir
+
+    CHECKPOINTPATH = config.checkpoint_path
+    data_path = experiment_config.data_path
     prefixes = ["FC", "AE"]
-    if prefix_str not in prefixes:
+    if lstm_config.prefix not in prefixes:
         raise ValueError("Invalid prefix. Expected one of: %s" % prefixes)
-    data_path = '/home/leigh/Code/ekoh/tabula_rasa/data/combined.csv'
     df = load_data_csv(data_path)
-    CHECKPOINTPATH = path.join(getcwd(), './results')
+    CHECKPOINTPATH = path.join(getcwd(), root_dir)
     csv_logger = CSVLogger(CHECKPOINTPATH, name=f"{prefix_str}_model{latent_dim}")
     if prefix_str == "AE":
         dm = data_module(data=df)
     elif prefix_str == "FC":
-        dm = data_module(data=df, 
-                        target=["precipitation"])
+        dm = data_module(data=df,
+                        features=config.lstm_config.features, 
+                        target=config.lstm_config.target)
         ae_checkpoint_path = get_checkpoint_filepath("AE", 
                                                  latent_dim, 
                                                  CHECKPOINTPATH)
@@ -45,22 +60,23 @@ def _train(prefix_str: str = "AE",
     
     # Create a PyTorch Lightning trainer with the checkpoint callback
     trainer = pl.Trainer(default_root_dir=path.join(CHECKPOINTPATH),
-                        accelerator="cpu",
+                        accelerator=accelerator,
                         devices=1,
                         enable_checkpointing=True,
                         logger=csv_logger,
-                        max_epochs=epochs,
+                        max_epochs=config.trainer_config.epochs,
                         callbacks=[ModelCheckpoint(save_weights_only=True)])
     if prefix_str == "AE":
-        model = Autoencoder(input_size=7, 
+        model = Autoencoder(input_size=input_size, 
                         latent_dim=latent_dim,
                         dropout=0.7,
-                        output_size=7,
+                        output_size=input_size,
                         batch_size=1,)
     elif prefix_str == "FC":
-        model = Forecaster(input_size=7, 
+        model = Forecaster(input_size=input_size, 
                         latent_dim=latent_dim,
-                        dropout=0.5,
+                        dropout=dropout,
+                        output_size=output_size,
                         ae_checkpoint_path=ae_checkpoint_path)
     
     trainer.fit(model, train_loader, val_loader)

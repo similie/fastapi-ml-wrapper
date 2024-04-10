@@ -9,6 +9,8 @@ from time import time
 import torch
 import pandas as pd
 
+from AllWeatherConfig import getAllWeatherMLConfig
+
 def get_checkpoint_filepath(model_prefix: str = "FC",
                             latent_dim: int = 128, 
                             checkpoint_path: str ="results"):
@@ -17,15 +19,13 @@ def get_checkpoint_filepath(model_prefix: str = "FC",
         raise ValueError("Invalid prefix. Expected one of: %s" % prefixes)
     project_root = path.dirname(__file__)
     filename = listdir(path.join(project_root, 
-                        checkpoint_path,
-                        f"{model_prefix}_model{latent_dim}",
-                        "version_0/checkpoints"))[0]
+        checkpoint_path,
+        f"{model_prefix}_model{latent_dim}"))[0]
     
     return path.join(project_root, 
-                    checkpoint_path,
-                    f"{model_prefix}_model{latent_dim}",
-                    "version_0/checkpoints",
-                    filename)  
+        checkpoint_path,
+        f"{model_prefix}_model{latent_dim}",
+        filename)  
 
 def plot_loss(check_pt_path):
     df = pd.read_csv(check_pt_path)
