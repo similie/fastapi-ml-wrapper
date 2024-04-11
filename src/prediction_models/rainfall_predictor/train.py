@@ -4,6 +4,7 @@ from layers.model import Autoencoder, Forecaster
 from dataset import data_module
 from preprocessor import load_data_csv
 from mutils import get_checkpoint_filepath
+from from_pretrained import autoencoder_from_pretrained
 
 from AllWeatherConfig import AllWeatherMLConfig
 
@@ -12,7 +13,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers.csv_logs import CSVLogger
 
-def _train(config: AllWeatherMLConfig) -> tuple[Autoencoder, dict[str, str]]:
+def _train(config: AllWeatherMLConfig) -> tuple[Autoencoder | Forecaster, dict[str, str]]:
     """
     Train the Autoencoder. Checkpoints are saved in the results
     folder. Args: - prefix_str: FC or AE
@@ -32,7 +33,6 @@ def _train(config: AllWeatherMLConfig) -> tuple[Autoencoder, dict[str, str]]:
     accelerator = trainer_config.accelerator
     root_dir = trainer_config.default_root_dir
 
-    CHECKPOINTPATH = config.checkpoint_path
     data_path = experiment_config.data_path
     prefixes = ["FC", "AE"]
     if lstm_config.prefix not in prefixes:
@@ -44,11 +44,11 @@ def _train(config: AllWeatherMLConfig) -> tuple[Autoencoder, dict[str, str]]:
         dm = data_module(data=df)
     elif prefix_str == "FC":
         dm = data_module(data=df,
-                        features=config.lstm_config.features, 
-                        target=config.lstm_config.target)
-        ae_checkpoint_path = get_checkpoint_filepath("AE", 
-                                                 latent_dim, 
-                                                 CHECKPOINTPATH)
+                        features=lstm_config.features, 
+                        target=lstm_config.target)
+        ae_checkpoint_path = get_checkpoint_filepath(model_prefix="AE", 
+            latent_dim=latent_dim, 
+            checkpoint_path=config.pretrain_path)
     else:
         print("Please provide FC or AE as a prefix string.")
         
@@ -59,27 +59,36 @@ def _train(config: AllWeatherMLConfig) -> tuple[Autoencoder, dict[str, str]]:
     test_loader = dm.test_dataloader
     
     # Create a PyTorch Lightning trainer with the checkpoint callback
-    trainer = pl.Trainer(default_root_dir=path.join(CHECKPOINTPATH),
-                        accelerator=accelerator,
-                        devices=1,
-                        enable_checkpointing=True,
-                        logger=csv_logger,
-                        max_epochs=config.trainer_config.epochs,
-                        callbacks=[ModelCheckpoint(save_weights_only=True)])
+    trainer = pl.Trainer(default_root_dir=path.join(getcwd(), 
+        root_dir),
+            accelerator=accelerator,
+            devices=1,
+            enable_checkpointing=True,
+            logger=csv_logger,
+            max_epochs=config.trainer_config.epochs,
+            callbacks=[ModelCheckpoint(save_weights_only=True)])
     if prefix_str == "AE":
-        model = Autoencoder(input_size=input_size, 
-                        latent_dim=latent_dim,
-                        dropout=0.7,
-                        output_size=input_size,
-                        batch_size=1,)
+        if experiment_config.retrain_flag:
+            cp = get_checkpoint_filepath(model_prefix=prefix_str,
+                latent_dim=latent_dim,
+                pretrain_path=config.pretrain_path)
+            model = autoencoder_from_pretrained(cp)
+            model.unfreeze()
+        else:
+            model = Autoencoder(input_size=input_size, 
+                latent_dim=latent_dim,
+                dropout=0.7,
+                output_size=input_size,
+                batch_size=1)
     elif prefix_str == "FC":
         model = Forecaster(input_size=input_size, 
-                        latent_dim=latent_dim,
-                        dropout=dropout,
-                        output_size=output_size,
-                        ae_checkpoint_path=ae_checkpoint_path)
-    
+            latent_dim=latent_dim,
+            dropout=dropout,
+            output_size=output_size,
+            ae_checkpoint_path=ae_checkpoint_path)
+
     trainer.fit(model, train_loader, val_loader)
+    
     # Test best model on validation and test set
     val_result = trainer.test(model, val_loader, verbose=False)
     test_result = trainer.test(model, test_loader, verbose=False)

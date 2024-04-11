@@ -13,28 +13,30 @@ from AllWeatherConfig import getAllWeatherMLConfig
 
 def get_checkpoint_filepath(model_prefix: str = "FC",
                             latent_dim: int = 128, 
-                            checkpoint_path: str ="results"):
+                            pretrain_path: str ="results"):
     prefixes = ["FC", "AE"]
     if model_prefix not in prefixes:
         raise ValueError("Invalid prefix. Expected one of: %s" % prefixes)
     project_root = path.dirname(__file__)
     filename = listdir(path.join(project_root, 
-        checkpoint_path,
-        f"{model_prefix}_model{latent_dim}"))[0]
+        pretrain_path,
+        f"{model_prefix}_model{latent_dim}",
+        "version_0/checkpoints/"))[0]
     
     return path.join(project_root, 
-        checkpoint_path,
+        pretrain_path,
         f"{model_prefix}_model{latent_dim}",
-        filename)  
+        "version_0/checkpoints",
+        filename)
 
 def plot_loss(check_pt_path):
     df = pd.read_csv(check_pt_path)
     sns.set_style('darkgrid')
     sns.set(rc={'figure.figsize':(14,8)})
-    ax = sns.lineplot(data=df, 
+    ax = sns.lineplot(data=df,
                       x = df.step % 1000,
                       y = df.iloc[:,2],
-                      legend='full', 
+                      legend='full',
                       lw=3)
     plt.savefig('results/' + 'trainloss.pdf')
 

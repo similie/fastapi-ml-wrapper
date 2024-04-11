@@ -21,6 +21,7 @@ class ExperimentConfig(BaseSettings):
     prediction_window: int = 12
     sequence_length: int = 12
     data_path: str
+    retrain_flag: bool
 
 class LstmConfig(BaseSettings):
     '''
@@ -50,7 +51,7 @@ class AllWeatherMLConfig(BaseSettings):
     experiment_config: ExperimentConfig = ExperimentConfig()
     lstm_config: LstmConfig = LstmConfig()
     trainer_config: TrainerConfig = TrainerConfig()
-    checkpoint_path: str = './pretrained_checkpoints/'
+    pretrain_path: str = './pretrained_checkpoints/'
 
 @lru_cache
 def getAllWeatherConfig():

@@ -118,7 +118,7 @@ def negatives(X: pd.DataFrame) -> pd.DataFrame:
 
 def outliers(X: pd.DataFrame) -> pd.DataFrame:
     num_cols = X.select_dtypes(include=np.number).columns.to_list()
-    mask = X[num_cols] > X[num_cols].quantile(0.999)
+    mask = X[num_cols] > X[num_cols].quantile(0.99)
     X[mask] = np.nan
     return X
 

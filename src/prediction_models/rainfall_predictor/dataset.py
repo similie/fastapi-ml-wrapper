@@ -2,6 +2,7 @@ from os import path, getcwd
 import pandas as pd
 import numpy as np
 from tqdm.auto import tqdm
+from math import ceil
 
 import torch
 from torch.nn.utils.rnn import pad_sequence
@@ -17,7 +18,8 @@ from sklearn.preprocessing import (PowerTransformer,
     StandardScaler, 
     QuantileTransformer, 
     RobustScaler,
-    MinMaxScaler)
+    MinMaxScaler,
+    MaxAbsScaler)
 
 class SequenceDataset(Dataset):
     """
@@ -93,8 +95,8 @@ class data_module():
         self.data = load_dataframe(data)
         self.features = features
         self.target = target
-        self.transforms = [RobustScaler(), 
-            QuantileTransformer(n_quantiles=200)]
+        self.transforms = [StandardScaler(), 
+            MaxAbsScaler()]
         self.frames = self.frame_scale(self.data)
         self.sequence_datasets = self.gen_sequence_datasets(self.frames, 
                                                             self.target)
@@ -127,9 +129,9 @@ class data_module():
                                    tvals: list[torch.tensor]) -> np.array:
         results = []
         for t in tvals:
-            v =self.transforms[0].inverse_transform(t.numpy())
-            p = self.transforms[1].inverse_transform(v[:,0].reshape(-1,1))
-            results.append(np.hstack((p, v[:,1:])))
+            v =self.transforms[0].inverse_transform(t.numpy()[:,1:])
+            p = self.transforms[1].inverse_transform(t[:,0].reshape(-1,1))
+            results.append(np.hstack((p, v)))
         return results
     
     def frame_scale(self, frames: dict):
@@ -139,13 +141,19 @@ class data_module():
         return result
     
     def transform_pipeline(self, df: pd.DataFrame):
+        idx = ceil(len(df)*0.6)
+        trs = df.iloc[:idx, :]
         if "precipitation" in df.columns.to_list():
-            precip = df['precipitation'].values.reshape(-1,1)
-            df['precipitation'] = self.transforms[1].fit_transform(precip)
-        vals = df.values
-        return pd.DataFrame(self.transforms[0].fit_transform(vals),
-                            columns=df.columns,
-                            index=df.index) 
+            precip = trs['precipitation'].to_numpy().reshape(-1,1)
+            pr = df['precipitation'].to_numpy().reshape(-1,1)
+            self.transforms[1].fit(precip)
+            p = self.transforms[1].transform(pr)
+        self.transforms[0].fit(trs.to_numpy()[:,1:])
+        vals = df.to_numpy()
+        return pd.DataFrame(np.hstack([p, 
+            self.transforms[0].transform(vals[:,1:])]),
+                columns=df.columns,
+                index=df.index) 
 
     def gen_sequence_datasets(self, frames: dict, target) -> dict[str, SequenceDataset]:
         sequence_datasets = {}
@@ -168,7 +176,7 @@ class data_module():
                                 batch_size=self.batch_size,
                                 drop_last=True,
                                 shuffle=False, 
-                                collate_fn=collate_batch,
+                                # collate_fn=collate_batch,
                                 num_workers=2)
         return val_loader
 
@@ -179,7 +187,7 @@ class data_module():
                                  batch_size=self.batch_size,
                                  drop_last=True,
                                  shuffle=False,
-                                 collate_fn=collate_batch,
+                                 # collate_fn=collate_batch,
                                  num_workers=2)
         return test_loader
 
@@ -211,7 +219,7 @@ class data_module():
         return DataLoader(ConcatDataset(train_sets),
                             batch_size=self.batch_size,
                             shuffle=False,
-                            collate_fn=collate_batch,
+                            # collate_fn=collate_batch,
                             num_workers=2)
 
     def val_combined_loader(self):
@@ -248,9 +256,13 @@ def test_datamodule(df):
         for i, (batch) in enumerate(it):
             if len(batch) == 2:
                 inputs, target = batch
-                if (torch.isnan(inputs).any() | torch.isnan(inputs).any()):
+                if (torch.isnan(inputs).any() | torch.isnan(target).any()):
                     print("Is nan!")
+                if (torch.isinf(inputs).any() | torch.isinf(target).any()):
+                    print("Is inf!") 
             else:
                 inputs, target = batch[0][0], batch[0][1]
                 if (torch.isnan(inputs).any() | torch.isnan(inputs).any()):
                     print("Is nan!")
+                if (torch.isinf(inputs).any() | torch.isinf(target).any()):
+                    print("Is inf!") 

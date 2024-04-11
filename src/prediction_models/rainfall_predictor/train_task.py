@@ -4,10 +4,9 @@ import torch
 from AllWeatherConfig import AllWeatherMLConfig
 
 """
-Training loop select AE or FC and latent dim 
-in the dotEnv. Check-pointing handled in the 
-_train method of the train.py file in file-path
-indicated also in the dotEnv.
+Supply the config from the dotEnv. Check-pointing 
+handled in the _train method of the train.py file 
+in file-path indicated also in the dotEnv.
 """
 
 def trainModels():
