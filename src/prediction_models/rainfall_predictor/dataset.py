@@ -243,7 +243,7 @@ def collate_batch(batch):
 
 def test_datamodule(df):
 
-    dm = data_module(data=df)
+    dm = data_module(data=df, target=['precipitation'])
     dm.setup(stage='fit')
     train_loader = dm.train_dataloader
     val_loader = dm.val_dataloader

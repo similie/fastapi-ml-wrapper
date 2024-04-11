@@ -4,9 +4,10 @@ import json
 
 from raw_pred import _predict
 from dataset import data_module
-from mutils import get_checkpoint_filepath, plot_predictions
+from mutils import (forecaster_from_pretrained, 
+                    get_checkpoint_filepath, 
+                    plot_predictions)
 
-from from_pretrained import forecaster_from_pretrained
 from AllWeatherConfig import getAllWeatherConfig
 from AllWeatherCubeResponse import AllWeatherCubeQueryResponse
 from AllWeatherCubeResponse import cleanCubeNameFromResponseKeys

@@ -6,30 +6,77 @@ import matplotlib.ticker as ticker
 import seaborn as sns
 from time import time
 
+from layers.model import Forecaster, Autoencoder
+import pytorch_lightning as pl
+
 import torch
 import pandas as pd
 
-from AllWeatherConfig import getAllWeatherMLConfig
+from AllWeatherConfig import getAllWeatherConfig
+from AllWeatherCubeResponse import AllWeatherCubeQueryResponse
+from AllWeatherCubeResponse import cleanCubeNameFromResponseKeys
+
+def forecaster_from_pretrained(checkpoint_path: str) -> pl.LightningModule:
+    model = Forecaster.load_from_checkpoint(checkpoint_path)
+    model.freeze()
+    return model
+
+def autoencoder_from_pretrained(checkpoint_path: str) -> pl.LightningModule:
+    model = Autoencoder.load_from_checkpoint(checkpoint_path)
+    model.freeze()
+    return model
+
+def serialise_ml_data():
+    jsonData = loadJsonFixture()
+    cubeName = getAllWeatherConfig().cube_name
+    cleanedJson = cleanCubeNameFromResponseKeys(jsonData)
+    jsonData = json.loads(cleanedJson)
+    model = AllWeatherCubeQueryResponse.model_validate(jsonData)
+    return model
+    
+def loadJsonFixture():
+    '''
+    load the sample Json file to the Cube query resonse model format.
+    '''
+    p = path.join('/home/leigh/Code/ekoh/similie/',
+                    'test',
+                    'fixtures', 
+                    'all_weather_cube_query_response.json')
+    with open(p, 'r') as file:
+        jsonData = json.load(file)
+        return json.dumps(jsonData)
 
 def get_checkpoint_filepath(model_prefix: str = "FC",
                             latent_dim: int = 128, 
-                            pretrain_path: str ="results"):
+                            checkpoint_path: str ="results"):
     prefixes = ["FC", "AE"]
     if model_prefix not in prefixes:
         raise ValueError("Invalid prefix. Expected one of: %s" % prefixes)
     project_root = path.dirname(__file__)
     filename = listdir(path.join(project_root, 
-        pretrain_path,
+        checkpoint_path,
         f"{model_prefix}_model{latent_dim}",
         "version_0/checkpoints/"))[0]
     
     return path.join(project_root, 
-        pretrain_path,
+        checkpoint_path,
         f"{model_prefix}_model{latent_dim}",
         "version_0/checkpoints",
         filename)
 
-def plot_loss(check_pt_path):
+def get_pretrain_filepath(model_prefix: str = "FC",
+                            latent_dim: int = 64, 
+                            pretrain_path: str ="pretrained_checkpoints"):
+    prefixes = ["FC", "AE"]
+    if model_prefix not in prefixes:
+        raise ValueError("Invalid prefix. Expected one of: %s" % prefixes)
+    project_root = path.dirname(__file__)
+    return path.join(project_root, 
+        pretrain_path,
+        f"{model_prefix}_model{latent_dim}",
+        "pretrained.ckpt")
+
+def plot_loss(metrics_path: str):
     df = pd.read_csv(check_pt_path)
     sns.set_style('darkgrid')
     sns.set(rc={'figure.figsize':(14,8)})

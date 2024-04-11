@@ -4,7 +4,7 @@ import pandas as pd
 import pytorch_lightning as pl
 
 # model imports
-from from_pretrained import forecaster_from_pretrained
+from mutils import forecaster_from_pretrained
 from layers.model import Forecaster
 from dataset import data_module
 

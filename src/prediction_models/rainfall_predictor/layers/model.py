@@ -190,9 +190,9 @@ class Forecaster(pl.LightningModule):
         """
         Reproduce Keras default init
         """
-        ih = (param.data for name, param in self.lstm.named_parameters() if 'weight_ih' in name)
-        hh = (param.data for name, param in self.lstm.named_parameters() if 'weight_hh' in name)
-        b = (param.data for name, param in self.lstm.named_parameters() if 'bias' in name)
+        ih = (param.data for name, param in self.named_parameters() if 'weight_ih' in name)
+        hh = (param.data for name, param in self.named_parameters() if 'weight_hh' in name)
+        b = (param.data for name, param in self.named_parameters() if 'bias' in name)
         for t in ih:
             nn.init.xavier_uniform_(t,
                 gain=nn.init.calculate_gain(nonlinearity='linear'))
