@@ -8,5 +8,5 @@ file.json
 .coverage
 .pytest_cache
 *.pyc
-results/
-/tmp
+**/results
+**/tmp
