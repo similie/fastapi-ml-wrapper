@@ -4,61 +4,65 @@ import pandas as pd
 import pytorch_lightning as pl
 
 # model imports
-from mutils import forecaster_from_pretrained
+from mutils import (forecaster_from_pretrained, 
+                    get_pretrain_filepath, 
+                    serialise_ml_data)
 from layers.model import Forecaster
 from dataset import data_module
+from AllWeatherConfig import getAllWeatherMLConfig
+
+
+config = getAllWeatherMLConfig()
+target_col = config.experiment_config.target_col
+sequence_length = config.experiment_config.sequence_length
 
 def _predict(
-        data: dict[str, pd.DataFrame],
-        checkpoint_path: str,
+        data: dict[str, pd.DataFrame] | None = None,
+        checkpoint_path: str | None = None,
         ) -> dict[str, pd.DataFrame]:
     """
+    Supply data, checkpoint_path or data will be loaded from
+    the test/test_data folder.
     Returns a dict with station numbers as keys and dataframes 
-    of hourly weather station predictions--a 3-day 
-    forecast of precipitation.
+    of hourly weather station predictions--a 3-day forecast of 
+    precipitation.
     """
 
-    model = forecaster_from_pretrained(checkpoint_path)
-    dm = data_module(data,
-                     target=['precipitation']) 
+    if checkpoint_path is None:
+        pretrain_path = get_pretrain_filepath(config.lstm_config.prefix,
+            config.lstm_config.latent_dim)
+    if data is None:
+        data = serialise_ml_data()
+    model = forecaster_from_pretrained(pretrain_path)
+
+    dm = data_module(data=data,
+                     target=target_col)
     dm.setup(stage="predict")
-    trainer = pl.Trainer(default_root_dir="results",
-                            enable_checkpointing=False,
-                            accelerator="cpu",
-                            devices=1)
+    trainer = pl.Trainer(enable_checkpointing=False,
+        accelerator="cpu",
+        devices=1)
      
     return generate_predictions(model, trainer, dm)
 
-def iterate_stations(preds: dict[str, pd.DataFrame],
-                    result: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
-    for s, _df in preds.items():
-        result[s] = pd.concat([result[s], _df])
-    return result
-
 def generate_predictions(model: pl.LightningModule, 
-                            trainer: pl.Trainer, 
-                            dm: data_module, 
-                            preds: dict | None = None,
-                        ):
+    trainer: pl.Trainer, 
+    dm: data_module, 
+    preds: dict | None = None):
+
     """
     Generates 6 x 12-hour predictions
     station by station.
     """
-    loader = dm.predict_dataloader
-    predictions = trainer.predict(model, loader)
-    result = dm.process_preds(predictions)
-    for i in range(5):
-        predictions = trainer.predict(model, 
-                                      dm.predict_combined_loader(preds=preds))
+    result = {}
+    for _ in range(6):
+        loader = dm.predict_dataloader
+        predictions = trainer.predict(model, loader)
         preds = dm.process_preds(predictions)
         for s, _df in preds.items():
-            result[s] = pd.concat([result[s], _df])
+            if s in result:  
+                result[s] = pd.concat([result[s], _df])
+            else:
+                result[s] = _df
+        dm = data_module(data=preds, target=target_col)
+        dm.setup(stage='predict')
     return result
-    #     predictions = dm.predict_combined_loader(result, 
-    #                       target=['precipitation'])
-    #     #pdm.setup(stage="predict")
-    #     preds = trainer.predict(model, 
-    #                             dm.predict_dataloader)
-    #     predictions = dm.process_preds(preds)
-    #     res = iterate_stations(predictions, result)
-    # return res

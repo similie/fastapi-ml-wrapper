@@ -244,16 +244,22 @@ class Forecaster(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
         inputs, target = batch[0].unsqueeze(0), batch[1].unsqueeze(0)
-        preds = self(inputs) # target
-        features = self.autoencoder(inputs)
+        features = self.autoencoder.encoder(inputs)
+        preds = self(inputs)
         return torch.cat((preds, features[:,:,1:]),dim=-1)
         
         #return self(batch[0].unsqueeze(0))        
 
-    def loss_function(self, inputs, target):
-        loss = F.mse_loss(inputs, target)
+    def loss_function(self, y_hat, target):
+        loss = F.mse_loss(y_hat, target)
         return loss
     
+    def smape(self, batch):
+        x, y = batch
+        y_hat = self.forward(x)
+        loss = lambda y, yh: 2*(y - yh).abs() / (y.abs() + yh.abs())
+        return loss(y, y_hat).mean(axis=0)
+
     def _reconstruction_loss(self, batch):
         """
         Per batch of data, this yields reconstruction loss : MSE
@@ -262,4 +268,5 @@ class Forecaster(pl.LightningModule):
         x_hat = self.forward(x)
         loss = F.mse_loss(x_f, x_hat, reduction='none')
         loss = loss.sum(dim=[2]).mean(dim=[1])
+
         return loss

@@ -14,8 +14,8 @@ pydantic validation.
 """
 
 config = AllWeatherMLConfig()
-cols = ["station", "date"] + config.experiment_config.features
-
+groupby_col = config.experiment_config.groupby_col
+cols = groupby_col + ["date"] + config.experiment_config.features
 
 agg_dict = {
     "station": "ffill",
@@ -28,17 +28,6 @@ agg_dict = {
     "solar": "mean"
 }
 
-cols = [ 
-    "station",
-    "date",
-    "precipitation",
-    "temperature",
-    "humidity",
-    "pressure",
-    "wind_speed",
-    "wind_direction",
-    "solar",
-]
 type_dict = {
     "station": str,
     "date": str,
@@ -79,8 +68,10 @@ def load_data_csv(data_dir: str,
 def load_dataframe(df: list | pd.DataFrame) -> dict:
     if isinstance(df, list):
         df = pd.DataFrame(df)
+    if isinstance(df, dict):
+        df = pd.DataFrame(df)
     df = df.reindex(columns=cols)
-    df['station'] = df.station.astype('str')
+    df[groupby_col] = df[groupby_col].astype('str')
     df = duplicate_datetime(df.copy())
     df = set_dt_index(df.copy())
     df = df[(df.index.year.isin([2020, 2021, 2022, 2023, 2024]))].copy()
@@ -90,8 +81,8 @@ def load_dataframe(df: list | pd.DataFrame) -> dict:
     df = impute_vals(df)
     df = df.dropna()
     # return df
-    return {s: _df.drop('station', axis=1) 
-        for s, _df in df.groupby('station') if len(_df) >= 11}
+    return {s[0]: _df.drop(groupby_col, axis=1) 
+        for s, _df in df.groupby(groupby_col) if len(_df) >= 11}
     
 def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
     df.set_index("date", inplace=True)
@@ -99,7 +90,9 @@ def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
 
 def sample_interp(df, agg_dict):
     df = df.resample('15min').first()
-    return df.resample('h').agg(agg_dict)
+    df = df.resample('h').agg(agg_dict)
+    df.index = df.index.to_period('h')
+    return df
 
 def duplicate_datetime(df: pd.DataFrame, datetime_col="date") -> pd.DataFrame:
     df[datetime_col] = pd.to_datetime(df[datetime_col], 

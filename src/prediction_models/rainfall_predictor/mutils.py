@@ -1,4 +1,5 @@
 from os import path, listdir
+import json
 ## Imports for plotting
 import matplotlib.pyplot as plt
 import matplotlib
@@ -32,16 +33,15 @@ def serialise_ml_data():
     cleanedJson = cleanCubeNameFromResponseKeys(jsonData)
     jsonData = json.loads(cleanedJson)
     model = AllWeatherCubeQueryResponse.model_validate(jsonData)
-    return model
+    return model.model_dump(by_alias=True)['data']
     
 def loadJsonFixture():
     '''
     load the sample Json file to the Cube query resonse model format.
     '''
-    p = path.join('/home/leigh/Code/ekoh/similie/',
-                    'test',
-                    'fixtures', 
-                    'all_weather_cube_query_response.json')
+    p = path.join('test',
+        'test_data', 
+        'all_weather_cube_query_response.json')
     with open(p, 'r') as file:
         jsonData = json.load(file)
         return json.dumps(jsonData)
@@ -64,28 +64,50 @@ def get_checkpoint_filepath(model_prefix: str = "FC",
         "version_0/checkpoints",
         filename)
 
-def get_pretrain_filepath(model_prefix: str = "FC",
-                            latent_dim: int = 64, 
-                            pretrain_path: str ="pretrained_checkpoints"):
+
+def get_metrics_filepath(model_prefix: str = "FC",
+                            latent_dim: int = 128, 
+                            checkpoint_path: str ="results"):
     prefixes = ["FC", "AE"]
     if model_prefix not in prefixes:
         raise ValueError("Invalid prefix. Expected one of: %s" % prefixes)
     project_root = path.dirname(__file__)
+    
     return path.join(project_root, 
-        pretrain_path,
+        checkpoint_path,
+        f"{model_prefix}_model{latent_dim}",
+        "version_0/metrics.csv")
+
+
+def get_pretrain_filepath(model_prefix: str = "FC",
+                            latent_dim: int = 64, 
+                            checkpoint_path: str ="pretrained_checkpoints"):
+    prefixes = ["FC", "AE"]
+    if model_prefix not in prefixes:
+        raise ValueError("Invalid prefix. Expected one of: %s" % prefixes)
+    project_root = path.dirname(__file__)
+    
+    return path.join(project_root, 
+        checkpoint_path,
         f"{model_prefix}_model{latent_dim}",
         "pretrained.ckpt")
 
-def plot_loss(metrics_path: str):
-    df = pd.read_csv(check_pt_path)
+def plot_loss(metrics_dict: dict[str, any] | None = None,
+    metrics_path: str | None = None):
+    if metrics_dict is None:
+        df = pd.read_csv(metrics_path)
+    else:
+        df = pd.DataFrame(metrics_dict)
     sns.set_style('darkgrid')
     sns.set(rc={'figure.figsize':(14,8)})
     ax = sns.lineplot(data=df,
-                      x = df.step % 1000,
+                      x = df.step % 100,
                       y = df.iloc[:,2],
                       legend='full',
                       lw=3)
-    plt.savefig('results/' + 'trainloss.pdf')
+    filename = f"./plots/loss{int(time())}.pdf"
+    plt.savefig(filename)
+    # plt.show()
 
 def plot_predictions(preds: dict, target: str = "precipitation"):
     """
@@ -112,11 +134,10 @@ def plot_predictions(preds: dict, target: str = "precipitation"):
     plt.xticks(rotation=45)
     plt.ylabel('rainfall (mm)')
     plt.xlabel('month-day-hour')
-    filename = f"./results/predictions{int(time())}.pdf"
+    filename = f"./plots/predictions{int(time())}.pdf"
     plt.savefig(filename)
     # plt.show()
     
-
 def reconstruction_predictions(model, input_data):
     """ 
         Not used as of yet. Look at generate_predictions

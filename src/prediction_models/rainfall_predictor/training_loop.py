@@ -14,11 +14,12 @@ def trainingRun(dimension: int, modelType: str, epochs: int) -> dict[str, any]:
     return {"model": model_ld, "result": result_ld}
 
 if __name__ == '__main__':
+    torch.set_default_dtype(torch.float32)
     dryRun = False
     trainingResults: dict[str, any] = {}
     max_epochs = 3
-    for dimension in [64]:
-        for modelType in ['FC']:
+    for dimension in [128]:
+        for modelType in ['AE']:
             start = datetime.now()
             key = f'{modelType}{dimension}'
             print(f'Starting run for: {key}')

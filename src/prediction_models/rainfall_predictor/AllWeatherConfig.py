@@ -16,13 +16,13 @@ class ExperimentConfig(BaseSettings):
     Experiments config settings, with .env namespace aliases
     '''
     model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='experiment_')
-    target: list[str]
+    target_col: list[str]
     features: list[str]
     prediction_window: int = 12
     sequence_length: int = 12
-    data_path: str
-    retrain_flag: bool
-
+    batch_size: str
+    groupby_col: list[str]
+    
 class LstmConfig(BaseSettings):
     '''
     LSTM config settings, with .env namespace aliases
@@ -40,8 +40,9 @@ class TrainerConfig(BaseSettings):
     '''
     model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='trainer_')
     accelerator: str
-    default_root_dir: str
-    epochs: int
+    torch_dtype: str
+    pretrained_path: str
+    num_workers: int
 
 class AllWeatherMLConfig(BaseSettings):
     '''

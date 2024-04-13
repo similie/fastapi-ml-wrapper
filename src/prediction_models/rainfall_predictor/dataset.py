@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from tqdm.auto import tqdm
 from math import ceil
+from datetime import timedelta
 
 import torch
 from torch.nn.utils.rnn import pad_sequence
@@ -26,7 +27,11 @@ class SequenceDataset(Dataset):
     Timeseries dataset 
     Args: 
     - target (leave as `None` for the AE)
-    - set target as precipitation for forecasting 
+    - set target as precipitation for forecasting
+    - prediction_window: how far into the future we
+        shift the target.
+    - sequence_length: length of the sequence the lstm
+        processes at each timestep.
     """
     def __init__(self, 
                  dataframe,
@@ -110,30 +115,35 @@ class data_module():
             self.predict_dataloader = self.predict_combined_loader()  
 
     def process_preds(self, preds: list) -> dict[str, pd.DataFrame]:
-        t_preds = self.truncate_prediction_sequences(preds)
+        t_preds = self.truncate_prediction_sequences(preds[-12:])
         station_idx = [(s, self.generate_datetime_index(_df.index.max()))
                             for s, _df in self.frames.items()]
         t_trans = self.inverse_transform_pipeline(t_preds)
+
         preds = {}
+
         for s, p in zip(station_idx, t_trans):
             preds[s[0]] = pd.DataFrame(p, columns=self.features, index=s[1])
         return preds 
 
     def truncate_prediction_sequences(self, preds: list) -> list:
-        return [l[-12:][0].squeeze(0) for l in preds]
+        return [l[:,-1:,:].squeeze(0) for l in preds[-12:]]
 
     def generate_datetime_index(self, start_time, periods=12):
-        return pd.date_range(start=start_time, freq='h', periods=periods)
+        return pd.date_range(start=start_time.to_timestamp(freq='h')\
+            + timedelta(hours=1), 
+            freq='h',
+            periods=periods)
     
     def inverse_transform_pipeline(self, 
                                    tvals: list[torch.tensor]) -> np.array:
         results = []
         for t in tvals:
-            v =self.transforms[0].inverse_transform(t.numpy()[:,1:])
-            p = self.transforms[1].inverse_transform(t[:,0].reshape(-1,1))
+            v =self.transforms[0].inverse_transform(t[:,1:].numpy())
+            p = self.transforms[1].inverse_transform(t[:,:1].numpy())
             results.append(np.hstack((p, v)))
-        return results
-    
+        return np.stack(results, axis=1) # .squeeze(0)
+
     def frame_scale(self, frames: dict):
         result = {}
         for s, _df in frames.items():
@@ -141,6 +151,10 @@ class data_module():
         return result
     
     def transform_pipeline(self, df: pd.DataFrame):
+        """
+        Fits on training set to avoid data leakage, 
+        then scales all the data.
+        """
         idx = ceil(len(df)*0.6)
         trs = df.iloc[:idx, :]
         if "precipitation" in df.columns.to_list():
@@ -206,11 +220,6 @@ class data_module():
         for s, _df in datasets.items():
             pred_loaders[s] = _df
         return CombinedLoader(pred_loaders, 'sequential') # try max_size_cycle
-        # pred_loaders = {}
-        # datasets = self.sequence_datasets
-        # for s, _df in datasets.items():
-        #     pred_loaders[s] = _df
-        # return CombinedLoader(pred_loaders, 'sequential') # try max_size_cycle
         
     def train_combined_loader(self):
         train_sets = []
@@ -235,11 +244,13 @@ class data_module():
         return CombinedLoader(test_loaders, 'sequential')
 
 def collate_batch(batch):
+    """
+    Unused for batch_size=1. Only for batched training.
+    """
     (xx, yy) = zip(*batch)
     xx_pad = pad_sequence(xx, batch_first=True, padding_value=0)
     yy_pad = pad_sequence(yy, batch_first=True, padding_value=0)
     return xx_pad, yy_pad
-
 
 def test_datamodule(df):
 
