@@ -68,8 +68,6 @@ def load_data_csv(data_dir: str,
 def load_dataframe(df: list | pd.DataFrame) -> dict:
     if isinstance(df, list):
         df = pd.DataFrame(df)
-    if isinstance(df, dict):
-        df = pd.DataFrame(df)
     df = df.reindex(columns=cols)
     df[groupby_col] = df[groupby_col].astype('str')
     df = duplicate_datetime(df.copy())
@@ -80,7 +78,6 @@ def load_dataframe(df: list | pd.DataFrame) -> dict:
     df = sample_interp(df, agg_dict)
     df = impute_vals(df)
     df = df.dropna()
-    # return df
     return {s[0]: _df.drop(groupby_col, axis=1) 
         for s, _df in df.groupby(groupby_col) if len(_df) >= 11}
     

@@ -192,7 +192,6 @@ class Forecaster(pl.LightningModule):
         self.linear1 = nn.Linear(self.latent_dim//2, self.latent_dim//4)
         act_fn()
         self.linear_out = nn.Linear(self.latent_dim//4, self.output_size)
-        self.test_input(torch.randn((1,12,7), torch.randn((1,12,1))))
     
         self.init_weights()
 

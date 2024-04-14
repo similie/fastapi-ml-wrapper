@@ -34,42 +34,43 @@ def _predict(
     if data is None:
         data = serialise_ml_data()
     model = forecaster_from_pretrained(pretrain_path)
-    model.eval()
-
+    model.eval() # should be unnecessary, tbd
     dm = data_module(data=data,
-                     target=target_col)
+        target=target_col)
     dm.setup(stage="predict")
     trainer = pl.Trainer(enable_checkpointing=False,
         accelerator="cpu",
         devices=1)
-     
-    return generate_predictions(model, trainer, dm)
+    loader = dm.predict_dataloader
+    predictions = trainer.predict(model, loader)
+    preds = dm.process_preds(predictions)
+#     return generate_predictions(model, trainer, dm)
 
-def generate_predictions(model: pl.LightningModule, 
-    trainer: pl.Trainer, 
-    dm: data_module, 
-    preds: dict | None = None):
+# def generate_predictions(model: pl.LightningModule, 
+#     trainer: pl.Trainer, 
+#     dm: data_module, 
+#     preds: dict | None = None):
 
-    """
-    Generates 6 x 12-hour predictions
-    station by station.
-    """
-    result = {}
-    for _ in range(6):
-        loader = dm.predict_dataloader
-        predictions = trainer.predict(model, loader)
-        preds = dm.process_preds(predictions)
-        for s, _df in preds.items():
-            if s in result:  
-                result[s] = pd.concat([result[s], _df])
-            else:
-                result[s] = _df
-        df_list = [] 
-        for s, _df in preds.items():
-            _df['station'] = s
-            _df['date'] = pd.to_datetime(_df.index.copy())
-            df_list.append(_df)
-        concat_df = pd.concat(df_list).sort_index()
-        dm = data_module(data=concat_df, target=target_col)
-        dm.setup(stage='predict')
-    return result
+#     """
+#     Generates 6 x 12-hour predictions
+#     station by station.
+#     """
+#     result = {}
+#     for _ in range(6):
+#         loader = dm.predict_dataloader
+#         predictions = trainer.predict(model, loader)
+#         preds = dm.process_preds(predictions)
+#         for s, _df in preds.items():
+#             if s in result:  
+#                 result[s] = pd.concat([result[s], _df])
+#             else:
+#                 result[s] = _df
+#         df_list = [] 
+#         for s, _df in preds.items():
+#             _df['station'] = s
+#             _df['date'] = pd.to_datetime(_df.index.copy())
+#             df_list.append(_df)
+#         concat_df = pd.concat(df_list).sort_index()
+#         dm = data_module(data=concat_df, target=target_col)
+#         dm.setup(stage='predict')
+#     return result
