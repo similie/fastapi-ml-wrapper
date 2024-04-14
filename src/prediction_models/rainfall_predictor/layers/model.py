@@ -22,6 +22,7 @@ class Encoder(nn.Module):
                  act_fn : object = nn.Tanh):
         
         super().__init__()
+        self.act_fn = act_fn()
         self.latent_dim = latent_dim
         self.lstm = nn.LSTM(input_size=input_size, 
             hidden_size=latent_dim, 
@@ -29,7 +30,7 @@ class Encoder(nn.Module):
             dropout=dropout,
             bidirectional=False, 
             batch_first=True)
-        act_fn()
+        
  
     def forward(self, x):
         # Initialize hidden state with zeros
@@ -54,6 +55,7 @@ class Decoder(nn.Module):
             - act_fn : Activation function used throughout the decoder network
         """
         super().__init__()
+        self.act_fn = act_fn()
         self.latent_dim = latent_dim
         self.lstm = nn.LSTM(input_size=latent_dim, 
             hidden_size=latent_dim,
@@ -61,7 +63,6 @@ class Decoder(nn.Module):
             dropout=dropout,
             bidirectional=False,
             batch_first=True)
-        act_fn()
         self.linear = nn.Linear(latent_dim, output_size) 
 
     def forward(self, x):
@@ -95,7 +96,7 @@ class Autoencoder(pl.LightningModule):
         # Example input array needed for visualizing the graph of the network
         self.test_input = [torch.randn(batch_size, 12, input_size), torch.randn(batch_size, 12, output_size)] 
 
-        self.init_weights()
+        # self.init_weights()
 
     def init_weights(self):
         """
@@ -175,34 +176,32 @@ class Forecaster(pl.LightningModule):
         """
         super().__init__()
         # Saving hyperparameters of autoencoder
+        self.act_fn = act_fn()
         self.latent_dim = latent_dim
         self.output_size = output_size
         self.save_hyperparameters()
         self.autoencoder = autoencoder_class.load_from_checkpoint(ae_checkpoint_path)
-        self.autoencoder.freeze()
+        self.autoencoder.eval()
         self.lstm = nn.LSTM(input_size=latent_dim+input_size, 
             hidden_size=latent_dim, 
             num_layers=2,
             dropout=dropout,
             bidirectional=False, 
             batch_first=True)
-        act_fn()
         self.linear = nn.Linear(self.latent_dim, self.latent_dim//2)
-        act_fn()
         self.linear1 = nn.Linear(self.latent_dim//2, self.latent_dim//4)
-        act_fn()
         self.linear_out = nn.Linear(self.latent_dim//4, self.output_size)
     
-        self.init_weights()
+        # self.init_weights()
 
     def init_weights(self):
         """
         Reproduce Keras default init
         """
         if self.training:
-            ih = (param.data for name, param in self.named_parameters() if 'weight_ih' in name)
-            hh = (param.data for name, param in self.named_parameters() if 'weight_hh' in name)
-            b = (param.data for name, param in self.named_parameters() if 'bias' in name)
+            ih = (param.data for name, param in self.lstm.named_parameters() if 'weight_ih' in name)
+            hh = (param.data for name, param in self.lstm.named_parameters() if 'weight_hh' in name)
+            b = (param.data for name, param in self.lstm.named_parameters() if 'bias' in name)
             for t in ih:
                 nn.init.xavier_uniform_(t,
                     gain=nn.init.calculate_gain(nonlinearity='linear'))
@@ -224,20 +223,20 @@ class Forecaster(pl.LightningModule):
         # Initialize cell state
         c0 = torch.empty(2, x.size(0), self.latent_dim)
 
-        y, (_, _) = self.autoencoder.encoder.lstm(x)
+        y = self.autoencoder.encoder(x)
         x = torch.cat((x, y), dim=-1)
         x, (h1, c1) = self.lstm(x, (h0, c0))
-        x = self.linear(x)
-        x = self.linear1(x)
+        x = self.act_fn(self.linear(x))
+        x = self.act_fn(self.linear1(x))
         return self.linear_out(x)
 
     def configure_optimizers(self):
         return optim.AdamW(self.parameters(), lr=1e-3, weight_decay=0.01)
     
-    def training_step(self, batch):
+    def training_step(self, batch, batch_idx, dataloader_idx=0):
         inputs, target = batch
         yhat = self(inputs)
-        loss = self.smape(yhat, target)
+        loss = self.loss_function(yhat, target)
         self.log('train_loss', loss)
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):

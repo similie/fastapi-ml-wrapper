@@ -19,7 +19,7 @@ if __name__ == '__main__':
     dryRun = False
     trainingResults: dict[str, any] = {}
     max_epochs = 3
-    for modelType in ['AE', 'FC']:
+    for modelType in ['FC']:
         for dimension in [64]:
             start = datetime.now()
             key = f'{modelType}{dimension}'
