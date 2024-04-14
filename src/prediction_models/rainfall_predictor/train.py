@@ -53,7 +53,7 @@ def _train(prefix_str: str,
         accelerator="cpu",
         devices=1,
         enable_checkpointing=True,
-        gradient_clip_val=0.8,
+        gradient_clip_val=0.5,
         logger=csv_logger,
         max_epochs=epochs,
         callbacks=[ModelCheckpoint(save_weights_only=True)])
