@@ -64,7 +64,6 @@ def get_checkpoint_filepath(model_prefix: str = "FC",
         "version_0/checkpoints",
         filename)
 
-
 def get_metrics_filepath(model_prefix: str = "FC",
                             latent_dim: int = 128, 
                             checkpoint_path: str ="results"):

@@ -101,19 +101,20 @@ class Autoencoder(pl.LightningModule):
         """
         Reproduce Keras default init
         """
-        ih = (param.data for name, param in self.named_parameters() if 'weight_ih' in name)
-        hh = (param.data for name, param in self.named_parameters() if 'weight_hh' in name)
-        b = (param.data for name, param in self.named_parameters() if 'bias' in name)
-        for t in ih:
-            nn.init.xavier_uniform_(t,
-                gain=nn.init.calculate_gain(nonlinearity='linear'))
-        for t in hh:
-            nn.init.orthogonal_(t)
-        for t in b:
-            nn.init.constant_(t, 0)
+        if self.training:
+            ih = (param.data for name, param in self.named_parameters() if 'weight_ih' in name)
+            hh = (param.data for name, param in self.named_parameters() if 'weight_hh' in name)
+            b = (param.data for name, param in self.named_parameters() if 'bias' in name)
+            for t in ih:
+                nn.init.xavier_uniform_(t,
+                    gain=nn.init.calculate_gain(nonlinearity='linear'))
+            for t in hh:
+                nn.init.orthogonal_(t)
+            for t in b:
+                nn.init.constant_(t, 0)
         
-        nn.init.xavier_uniform_(self.decoder.linear.weight,
-            nn.init.calculate_gain(nonlinearity='linear'))
+            nn.init.xavier_uniform_(self.decoder.linear.weight,
+                nn.init.calculate_gain(nonlinearity='linear'))
 
     def forward(self, x):
         z = self.encoder(x)
@@ -129,6 +130,12 @@ class Autoencoder(pl.LightningModule):
         loss = F.mse_loss(x_f, x_hat, reduction='none')
         loss = loss.sum(dim=[2]).mean(dim=[1])
         return loss
+
+    def smape(self, batch):
+        x, y = batch
+        y_hat = self.forward(x)
+        loss = lambda y, yh: 2*(y - yh).abs() / (y.abs() + yh.abs())
+        return loss(y, y_hat).sum(dim=[2]).mean(dim=[1])
 
     def configure_optimizers(self):
         return optim.AdamW(self.parameters(), lr=1e-3, weight_decay=0.01)
@@ -185,28 +192,32 @@ class Forecaster(pl.LightningModule):
         self.linear1 = nn.Linear(self.latent_dim//2, self.latent_dim//4)
         act_fn()
         self.linear_out = nn.Linear(self.latent_dim//4, self.output_size)
+        self.test_input(torch.randn((1,12,7), torch.randn((1,12,1))))
+    
+        self.init_weights()
 
     def init_weights(self):
         """
         Reproduce Keras default init
         """
-        ih = (param.data for name, param in self.named_parameters() if 'weight_ih' in name)
-        hh = (param.data for name, param in self.named_parameters() if 'weight_hh' in name)
-        b = (param.data for name, param in self.named_parameters() if 'bias' in name)
-        for t in ih:
-            nn.init.xavier_uniform_(t,
-                gain=nn.init.calculate_gain(nonlinearity='linear'))
-        for t in hh:
-            nn.init.orthogonal_(t)
-        for t in b:
-            nn.init.constant_(t, 0)
+        if self.training:
+            ih = (param.data for name, param in self.named_parameters() if 'weight_ih' in name)
+            hh = (param.data for name, param in self.named_parameters() if 'weight_hh' in name)
+            b = (param.data for name, param in self.named_parameters() if 'bias' in name)
+            for t in ih:
+                nn.init.xavier_uniform_(t,
+                    gain=nn.init.calculate_gain(nonlinearity='linear'))
+            for t in hh:
+                nn.init.orthogonal_(t)
+            for t in b:
+                nn.init.constant_(t, 0)
         
-        nn.init.xavier_uniform_(self.linear.weight,
-            nn.init.calculate_gain(nonlinearity='linear'))
-        nn.init.xavier_uniform_(self.linear1.weight,
-            nn.init.calculate_gain(nonlinearity='linear'))
-        nn.init.xavier_uniform_(self.linear_out.weight,
-            nn.init.calculate_gain(nonlinearity='linear'))
+            nn.init.xavier_uniform_(self.linear.weight,
+                nn.init.calculate_gain(nonlinearity='linear'))
+            nn.init.xavier_uniform_(self.linear1.weight,
+                nn.init.calculate_gain(nonlinearity='linear'))
+            nn.init.xavier_uniform_(self.linear_out.weight,
+                nn.init.calculate_gain(nonlinearity='linear'))
 
     def forward(self, x):
         # Initialize hidden state
@@ -227,7 +238,7 @@ class Forecaster(pl.LightningModule):
     def training_step(self, batch):
         inputs, target = batch
         yhat = self(inputs)
-        loss = self.loss_function(yhat, target)
+        loss = self.smape(yhat, target)
         self.log('train_loss', loss)
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
@@ -244,12 +255,10 @@ class Forecaster(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
         inputs, target = batch[0].unsqueeze(0), batch[1].unsqueeze(0)
-        features = self.autoencoder.encoder(inputs)
+        features = self.autoencoder(inputs)
         preds = self(inputs)
         return torch.cat((preds, features[:,:,1:]),dim=-1)
         
-        #return self(batch[0].unsqueeze(0))        
-
     def loss_function(self, y_hat, target):
         loss = F.mse_loss(y_hat, target)
         return loss
@@ -258,15 +267,15 @@ class Forecaster(pl.LightningModule):
         x, y = batch
         y_hat = self.forward(x)
         loss = lambda y, yh: 2*(y - yh).abs() / (y.abs() + yh.abs())
-        return loss(y, y_hat).mean(axis=0)
+        return loss(y, y_hat).mean(dims=[0])
 
-    def _reconstruction_loss(self, batch):
+    def scaled_reconstruction_loss(self, batch):
         """
         Per batch of data, this yields reconstruction loss : MSE
         """
         x, x_f = batch
         x_hat = self.forward(x)
+        scaler = torch.linspace(0.1, 1, x.size(1))[None,:]
         loss = F.mse_loss(x_f, x_hat, reduction='none')
-        loss = loss.sum(dim=[2]).mean(dim=[1])
-
-        return loss
+        scaled_loss = loss.sum(dim=[2]) * scaler
+        return scaled_loss.mean(dim=[1])

@@ -89,7 +89,7 @@ def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def sample_interp(df, agg_dict):
-    df = df.resample('15min').first()
+    df = df.resample('10min').first()
     df = df.resample('h').agg(agg_dict)
     df.index = df.index.to_period('h')
     return df

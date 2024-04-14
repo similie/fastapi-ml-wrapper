@@ -1,5 +1,6 @@
 from datetime import datetime
 from train import _train
+import torch
 
 def trainingRun(dimension: int, modelType: str, epochs: int) -> dict[str, any]:
     """
@@ -18,8 +19,8 @@ if __name__ == '__main__':
     dryRun = False
     trainingResults: dict[str, any] = {}
     max_epochs = 3
-    for dimension in [128]:
-        for modelType in ['AE']:
+    for modelType in ['AE', 'FC']:
+        for dimension in [64]:
             start = datetime.now()
             key = f'{modelType}{dimension}'
             print(f'Starting run for: {key}')
@@ -31,6 +32,5 @@ if __name__ == '__main__':
             end = datetime.now()
             diff = (end - start).total_seconds() * (1/60)
             print(f'Finished {key} in {diff}mins')
-
     print('Finished training ', result['model'].__class__)
     print(trainingResults)

@@ -26,7 +26,7 @@ def _train(prefix_str: str,
     """
     retrain = False  
     trainer_dir = 'results'
-    data_path = '/home/leigh/Code/ekoh/tabula_rasa/data/combined.csv'
+    data_path = './tmp/combined.csv'
     prefixes = ["FC", "AE"]
     if prefix_str not in prefixes:
         raise ValueError("Invalid prefix. Expected one of: %s" % prefixes)
@@ -53,6 +53,7 @@ def _train(prefix_str: str,
         accelerator="cpu",
         devices=1,
         enable_checkpointing=True,
+        gradient_clip_val=0.8,
         logger=csv_logger,
         max_epochs=epochs,
         callbacks=[ModelCheckpoint(save_weights_only=True)])
