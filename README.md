@@ -1,5 +1,5 @@
 # Project Beginn
-![logo for Project Beginn](static/img/logo2.png)
+![logo for Project Beginn](static/img/logo3.png)
 
 At Project Beginn, our mission is to pioneer advanced machine learning solutions that empower communities and organizations to integrate actionable environmental data seamlessly into their systems.  
 
