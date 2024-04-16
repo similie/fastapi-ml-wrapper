@@ -1,5 +1,5 @@
 # Project Beginn
-![logo for Project Beginn](https://github.com/similie/fastapi-ml-wrapper/assets/77981429/b8caedcc-81f4-4767-988f-bd327a757402, width=200)
+![logo for Project Beginn](https://github.com/similie/fastapi-ml-wrapper/static/img/logo2.png, width=200)
 
 At Project Beginn, our mission is to pioneer advanced machine learning solutions that empower communities and organizations to integrate actionable environmental data seamlessly into their systems.  
 
