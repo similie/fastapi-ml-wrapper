@@ -18,7 +18,7 @@ if __name__ == '__main__':
     torch.set_default_dtype(torch.float32)
     dryRun = False
     trainingResults: dict[str, any] = {}
-    max_epochs = 3
+    max_epochs = 1
     for modelType in ['FC']:
         for dimension in [64]:
             start = datetime.now()

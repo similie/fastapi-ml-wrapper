@@ -9,4 +9,5 @@ file.json
 .pytest_cache
 *.pyc
 **/results
+**/lightning_logs
 **/tmp

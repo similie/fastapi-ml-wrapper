@@ -115,34 +115,35 @@ class data_module():
             self.predict_dataloader = self.predict_combined_loader()  
 
     def process_preds(self, preds: list) -> dict[str, pd.DataFrame]:
-        t_preds = self.truncate_prediction_sequences(preds[-12:])
-        station_idx = [(s, self.generate_datetime_index(_df.index.max()))
-                            for s, _df in self.frames.items()]
+        t_preds = self.truncate_prediction_sequences(preds)
+        # t_preds[:,:1] = t_preds[:,:1]+abs(0.001+0.1*np.random.randn(44,1))
+        # t_preds[21:24,:1] = t_preds[21:24,:1]+abs(2.1+0.3*np.random.randn(3,1))
+        station_key = list(self.frames.keys())[0]
+        _df = self.frames[station_key]
+        _idx = self.generate_datetime_index(_df.index.min(),
+            periods=44)
+    
         t_trans = self.inverse_transform_pipeline(t_preds)
-
         preds = {}
-
-        for s, p in zip(station_idx, t_trans):
-            preds[s[0]] = pd.DataFrame(p, columns=self.features, index=s[1])
+        preds[station_key] = pd.DataFrame(t_trans, 
+            columns=self.features, 
+            index=_idx)
         return preds 
 
     def truncate_prediction_sequences(self, preds: list) -> list:
-        return [l[:,-1:,:].squeeze(0) for l in preds[-12:]]
+
+        return np.stack([l[:,0].squeeze(0).numpy() for l in preds[::9]], axis=0)
 
     def generate_datetime_index(self, start_time, periods=12):
-        return pd.date_range(start=start_time.to_timestamp(freq='h')\
-            + timedelta(hours=1), 
+        return pd.date_range(start=start_time.to_timestamp(freq='h'), 
             freq='h',
-            periods=periods)
+            periods=periods).to_period(freq='h')
     
     def inverse_transform_pipeline(self, 
-                                   tvals: list[torch.tensor]) -> np.array:
-        results = []
-        for t in tvals:
-            v =self.transforms[0].inverse_transform(t[:,1:].numpy())
-            p = self.transforms[1].inverse_transform(t[:,:1].numpy())
-            results.append(np.hstack((p, v)))
-        return np.stack(results, axis=1) # .squeeze(0)
+                                   tvals: np.array) -> np.array:
+        v =self.transforms[0].inverse_transform(tvals[:,1:])
+        p = self.transforms[1].inverse_transform(tvals[:,:1].reshape(-1,1))
+        return np.hstack((p, v)) 
 
     def frame_scale(self, frames: dict):
         result = {}

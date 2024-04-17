@@ -53,7 +53,7 @@ def _train(prefix_str: str,
         accelerator="cpu",
         devices=1,
         enable_checkpointing=True,
-        gradient_clip_val=0.5,
+        gradient_clip_val=0.49,
         logger=csv_logger,
         max_epochs=epochs,
         callbacks=[ModelCheckpoint(save_weights_only=True)])
@@ -67,13 +67,13 @@ def _train(prefix_str: str,
         else:
             model = Autoencoder(input_size=7, 
                 latent_dim=latent_dim,
-                dropout=0.7,
+                dropout=0.5,
                 output_size=7,
                 batch_size=1)
     elif prefix_str == "FC":
         model = Forecaster(input_size=7, 
             latent_dim=latent_dim,
-            dropout=0.5,
+            dropout=0.2,
             output_size=1,
             ae_checkpoint_path=ae_checkpoint_path)
     trainer.fit(model, train_loader, val_loader)

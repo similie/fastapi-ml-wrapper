@@ -56,7 +56,7 @@
       "all_weather.avg_temperature": 29.301785673413956,
       "all_weather.avg_humidity": 83.37076595851353,
       "all_weather.avg_pressure": 1007.9321430751255,
-      "all_weather.sum_precipitation": 0.2
+      "all_weather.sum_precipitation": 1
     },
     {
       "all_weather.station": 27,
@@ -70,7 +70,7 @@
       "all_weather.avg_temperature": 29.570000076293944,
       "all_weather.avg_humidity": 85.45770568847657,
       "all_weather.avg_pressure": 1008.0299926757813,
-      "all_weather.sum_precipitation": 0.5
+      "all_weather.sum_precipitation": 1
     },
     {
       "all_weather.station": 27,
@@ -196,7 +196,7 @@
       "all_weather.avg_temperature": 27.95172411819984,
       "all_weather.avg_humidity": 78.36256500770305,
       "all_weather.avg_pressure": 1007.7465546706627,
-      "all_weather.sum_precipitation": 2.476
+      "all_weather.sum_precipitation": 0
     },
     {
       "all_weather.station": 27,
@@ -462,7 +462,7 @@
       "all_weather.avg_temperature": 29.75192301089947,
       "all_weather.avg_humidity": 88.15492277878981,
       "all_weather.avg_pressure": 1007.0365342360276,
-      "all_weather.sum_precipitation": 3
+      "all_weather.sum_precipitation": 10
     },
     {
       "all_weather.station": 27,
@@ -476,7 +476,7 @@
       "all_weather.avg_temperature": 29.9259259612472,
       "all_weather.avg_humidity": 88.91708458794488,
       "all_weather.avg_pressure": 1006.9222197356047,
-      "all_weather.sum_precipitation": 0.322
+      "all_weather.sum_precipitation": 10
     },
     {
       "all_weather.station": 27,
@@ -490,7 +490,7 @@
       "all_weather.avg_temperature": 29.818518320719402,
       "all_weather.avg_humidity": 88.3597166273329,
       "all_weather.avg_pressure": 1007.0666662145544,
-      "all_weather.sum_precipitation": 0.1
+      "all_weather.sum_precipitation": 10
     },
     {
       "all_weather.station": 27,
@@ -504,7 +504,7 @@
       "all_weather.avg_temperature": 29.75,
       "all_weather.avg_humidity": 86.51443252563476,
       "all_weather.avg_pressure": 1007.5799926757812,
-      "all_weather.sum_precipitation": 0
+      "all_weather.sum_precipitation": 10
     },
     {
       "all_weather.station": 27,
@@ -1372,7 +1372,7 @@
       "all_weather.avg_temperature": 29.201666609446207,
       "all_weather.avg_humidity": 83.04899113972982,
       "all_weather.avg_pressure": 1008.088324991862,
-      "all_weather.sum_precipitation": 0.051000003
+      "all_weather.sum_precipitation": 0
     },
     {
       "all_weather.station": 27,
@@ -1638,7 +1638,7 @@
       "all_weather.avg_temperature": 29.962069018133754,
       "all_weather.avg_humidity": 89.18579601419383,
       "all_weather.avg_pressure": 1010.4137888941272,
-      "all_weather.sum_precipitation": 0.8
+      "all_weather.sum_precipitation": 0
     },
     {
       "all_weather.station": 27,
@@ -1708,7 +1708,7 @@
       "all_weather.avg_temperature": 29.015517267687567,
       "all_weather.avg_humidity": 85.64757800924367,
       "all_weather.avg_pressure": 1009.3775855754984,
-      "all_weather.sum_precipitation": 1
+      "all_weather.sum_precipitation": 0
     },
     {
       "all_weather.station": 27,
@@ -1722,7 +1722,7 @@
       "all_weather.avg_temperature": 25.993103389082282,
       "all_weather.avg_humidity": 70.7930214980553,
       "all_weather.avg_pressure": 1010.0913854138605,
-      "all_weather.sum_precipitation": 1.28900003
+      "all_weather.sum_precipitation": 0
     },
     {
       "all_weather.station": 27,
@@ -1736,7 +1736,7 @@
       "all_weather.avg_temperature": 25.68771927816826,
       "all_weather.avg_humidity": 72.49151571173417,
       "all_weather.avg_pressure": 1012.1385958487527,
-      "all_weather.sum_precipitation": 1
+      "all_weather.sum_precipitation": 0
     },
     {
       "all_weather.station": 27,
@@ -1750,7 +1750,7 @@
       "all_weather.avg_temperature": 25.87068958940177,
       "all_weather.avg_humidity": 73.95219552928003,
       "all_weather.avg_pressure": 1013.2017148774246,
-      "all_weather.sum_precipitation": 0.068
+      "all_weather.sum_precipitation": 0
     },
     {
       "all_weather.station": 27,
@@ -1834,7 +1834,7 @@
       "all_weather.avg_temperature": 26.136207317483837,
       "all_weather.avg_humidity": 75.75068125231513,
       "all_weather.avg_pressure": 1011.4965473043508,
-      "all_weather.sum_precipitation": 0.5
+      "all_weather.sum_precipitation": 0
     },
     {
       "all_weather.station": 27,
@@ -1848,7 +1848,7 @@
       "all_weather.avg_temperature": 25.957142966134207,
       "all_weather.avg_humidity": 73.91033186231341,
       "all_weather.avg_pressure": 1011.105356488909,
-      "all_weather.sum_precipitation": 0
+      "all_weather.sum_precipitation": 0.5
     },
     {
       "all_weather.station": 27,
@@ -1862,7 +1862,7 @@
       "all_weather.avg_temperature": 25.732142993382045,
       "all_weather.avg_humidity": 72.59728513445172,
       "all_weather.avg_pressure": 1011.4035677228655,
-      "all_weather.sum_precipitation": 3
+      "all_weather.sum_precipitation": 1
     },
     {
       "all_weather.station": 27,
@@ -1876,7 +1876,7 @@
       "all_weather.avg_temperature": 25.758928605488368,
       "all_weather.avg_humidity": 72.82096317836216,
       "all_weather.avg_pressure": 1011.6625061035156,
-      "all_weather.sum_precipitation": 1
+      "all_weather.sum_precipitation": 0.5
     },
     {
       "all_weather.station": 27,
@@ -1890,7 +1890,7 @@
       "all_weather.avg_temperature": 25.663793366530847,
       "all_weather.avg_humidity": 71.07238637989965,
       "all_weather.avg_pressure": 1011.6189659381735,
-      "all_weather.sum_precipitation": 2
+      "all_weather.sum_precipitation": 0.5
     },
     {
       "all_weather.station": 27,

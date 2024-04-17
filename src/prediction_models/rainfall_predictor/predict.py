@@ -2,6 +2,7 @@ import os
 import torch
 import pandas as pd
 import pytorch_lightning as pl
+#from preprocessor import load_data_csv
 
 # model imports
 from mutils import (forecaster_from_pretrained, 
@@ -33,8 +34,9 @@ def _predict(
             config.lstm_config.latent_dim)
     if data is None:
         data = serialise_ml_data()
-    model = forecaster_from_pretrained(pretrain_path)
-    model.eval() # should be unnecessary, tbd
+    model = forecaster_from_pretrained(latent_dim=64, 
+        checkpoint_path=pretrain_path)
+    # model.eval() should be unnecessary, tbd
     dm = data_module(data=data,
         target=target_col)
     dm.setup(stage="predict")
@@ -43,7 +45,10 @@ def _predict(
         devices=1)
     loader = dm.predict_dataloader
     predictions = trainer.predict(model, loader)
-    preds = dm.process_preds(predictions)
+    # preds = dm.process_preds(predictions)
+    # truncs = [p[:,-1,:] for p in predictions]
+    return predictions, dm, data
+    
 #     return generate_predictions(model, trainer, dm)
 
 # def generate_predictions(model: pl.LightningModule, 
