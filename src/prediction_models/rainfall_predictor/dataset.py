@@ -95,16 +95,19 @@ class data_module():
                                     "wind_direction",
                                     "solar"],
                  batch_size: int = 1,
+                 sequence_length: int = 12,
+                 prediction_window: int = 12,
                  target: list | None = None):
         self.batch_size = batch_size
         self.data = load_dataframe(data)
+        self.prediction_window = prediction_window
+        self.sequence_length = sequence_length
         self.features = features
         self.target = target
         self.transforms = [StandardScaler(), 
             MaxAbsScaler()]
         self.frames = self.frame_scale(self.data)
-        self.sequence_datasets = self.gen_sequence_datasets(self.frames, 
-                                                            self.target)
+        self.sequence_datasets = self.gen_sequence_datasets(frames=self.frames)
 
     def setup(self, stage=None):
         if stage == "fit":
@@ -116,12 +119,10 @@ class data_module():
 
     def process_preds(self, preds: list) -> dict[str, pd.DataFrame]:
         t_preds = self.truncate_prediction_sequences(preds)
-        # t_preds[:,:1] = t_preds[:,:1]+abs(0.001+0.1*np.random.randn(44,1))
-        # t_preds[21:24,:1] = t_preds[21:24,:1]+abs(2.1+0.3*np.random.randn(3,1))
         station_key = list(self.frames.keys())[0]
         _df = self.frames[station_key]
         _idx = self.generate_datetime_index(_df.index.min(),
-            periods=44)
+            periods=len(_df))
     
         t_trans = self.inverse_transform_pipeline(t_preds)
         preds = {}
@@ -170,11 +171,13 @@ class data_module():
                 columns=df.columns,
                 index=df.index) 
 
-    def gen_sequence_datasets(self, frames: dict, target) -> dict[str, SequenceDataset]:
+    def gen_sequence_datasets(self, frames: dict) -> dict[str, SequenceDataset]:
         sequence_datasets = {}
         for s, _df in frames.items():
             sequence_datasets[s] = SequenceDataset(_df,
-                                                   target=target)
+                target=self.target,
+                prediction_window=self.prediction_window,
+                sequence_length=self.sequence_length)
         return sequence_datasets
              
     def gen_train_sets(self, dataset: SequenceDataset):
@@ -191,7 +194,7 @@ class data_module():
                                 batch_size=self.batch_size,
                                 drop_last=True,
                                 shuffle=False, 
-                                # collate_fn=collate_batch,
+                                collate_fn=collate_batch,
                                 num_workers=2)
         return val_loader
 
@@ -202,7 +205,7 @@ class data_module():
                                  batch_size=self.batch_size,
                                  drop_last=True,
                                  shuffle=False,
-                                 # collate_fn=collate_batch,
+                                 collate_fn=collate_batch,
                                  num_workers=2)
         return test_loader
 
@@ -215,7 +218,7 @@ class data_module():
         """
         pred_loaders = {}
         if preds:
-            datasets = self.gen_sequence_datasets(preds, target=['precipitation'])
+            datasets = self.gen_sequence_datasets(preds)
         else:
             datasets = self.sequence_datasets
         for s, _df in datasets.items():
@@ -229,7 +232,7 @@ class data_module():
         return DataLoader(ConcatDataset(train_sets),
                             batch_size=self.batch_size,
                             shuffle=False,
-                            # collate_fn=collate_batch,
+                            collate_fn=collate_batch,
                             num_workers=2)
 
     def val_combined_loader(self):

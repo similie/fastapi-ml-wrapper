@@ -2,7 +2,9 @@ from datetime import datetime
 from train import _train
 import torch
 
-def trainingRun(dimension: int, modelType: str, epochs: int) -> dict[str, any]:
+def trainingRun(dimension: int, 
+        modelType: str, 
+        epochs: int) -> dict[str, any]:
     """
     Training loop for multiple forecasters with different latent dimensions.
     Check-pointing handled in the _train method of the train.py file.
@@ -27,7 +29,9 @@ if __name__ == '__main__':
             if dryRun is True:
                 result = {"model": key, "result": "debug"}
             else:
-                result = trainingRun(dimension, modelType, max_epochs)
+                result = trainingRun(dimension, 
+                    modelType, 
+                    max_epochs)
             trainingResults[key] = result
             end = datetime.now()
             diff = (end - start).total_seconds() * (1/60)

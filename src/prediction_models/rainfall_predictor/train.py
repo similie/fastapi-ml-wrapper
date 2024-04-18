@@ -14,7 +14,8 @@ from pytorch_lightning.loggers.csv_logs import CSVLogger
 
 def _train(prefix_str: str,
     latent_dim: int,
-    epochs: int) -> tuple[Autoencoder | Forecaster, dict[str, any]]:
+    epochs: int,
+    batch_size: int = 1) -> tuple[Autoencoder | Forecaster, dict[str, any]]:
     """
     Train the Autoencoder. Checkpoints are saved in the results
     folder. Args: - prefix_str: FC or AE
@@ -34,10 +35,16 @@ def _train(prefix_str: str,
     CHECKPOINTPATH = path.join(getcwd(), trainer_dir)
     csv_logger = CSVLogger(CHECKPOINTPATH, name=f"{prefix_str}_model{latent_dim}")
     if prefix_str == "AE":
-        dm = data_module(data=df)
+        dm = data_module(data=df,
+            sequence_length=12, 
+            prediction_window=12,
+            batch_size=1)
     elif prefix_str == "FC":
         dm = data_module(data=df, 
-                        target=['precipitation'])
+                        target=['precipitation'],
+                        sequence_length=12,
+                        prediction_window=12,
+                        batch_size=1)
         ae_checkpoint_path = get_checkpoint_filepath(model_prefix="AE", 
             latent_dim=latent_dim, 
             checkpoint_path=CHECKPOINTPATH)
@@ -68,8 +75,7 @@ def _train(prefix_str: str,
             model = Autoencoder(input_size=7, 
                 latent_dim=latent_dim,
                 dropout=0.5,
-                output_size=7,
-                batch_size=1)
+                output_size=7)
     elif prefix_str == "FC":
         model = Forecaster(input_size=7, 
             latent_dim=latent_dim,

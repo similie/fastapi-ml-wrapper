@@ -79,7 +79,7 @@ def load_dataframe(df: list | pd.DataFrame) -> dict:
     df = impute_vals(df)
     df = df.dropna()
     return {s[0]: _df.drop(groupby_col, axis=1) 
-        for s, _df in df.groupby(groupby_col) if len(_df) >= 11}
+        for s, _df in df.groupby(groupby_col)}
     
 def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
     df.set_index("date", inplace=True)

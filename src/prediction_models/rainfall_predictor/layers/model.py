@@ -34,7 +34,6 @@ class Encoder(nn.Module):
         h0 = torch.empty(1, x.size(0), self.latent_dim)
         # Initialize cell state
         c0 = torch.empty(1, x.size(0), self.latent_dim)
-
         x, (h1, c1) = self.encoder_lstm(x, (h0, c0))
         x = self.dropout(x)
         h1 = self.dropout(h1)
@@ -65,14 +64,13 @@ class Decoder(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
         self.linear = nn.Linear(latent_dim, output_size) 
 
-    def forward(self, x):
+    def forward(self, y):
         # h0 = torch.empty(2, x.size(0), self.latent_dim)
         # Initialize cell state
         # c0 = torch.empty(2, x.size(0), self.latent_dim)
-        x, (c0, h0) = x
-        x, (c1, h1) = self.decoder_lstm(x, (c0, h0))
-        x = self.dropout(x)
-        x = self.act_fn(x)
+        x, (h0, c0) = y
+        x, (h1, c1) = self.decoder_lstm(x, (h0, c0))
+        x = self.act_fn(h1)
         x = self.linear(x)
         return x
         
@@ -80,14 +78,16 @@ class Autoencoder(pl.LightningModule):
     """
         Autoencoder: trains on shifted timeseries data
         using reconstruction loss.
-        Args: batch_size = 1
+        Args: input_size - # features
+              latent_dim - hidden size
+              dropout - 0.5
+              output_size - # features
     """
     def __init__(self,
                  input_size: int,
                  latent_dim: int,
                  dropout: float,
                  output_size: int,
-                 batch_size: int,
                  encoder_class : object = Encoder,
                  decoder_class : object = Decoder):
         super().__init__()
@@ -97,7 +97,7 @@ class Autoencoder(pl.LightningModule):
         self.encoder = encoder_class(input_size, latent_dim, dropout)
         self.decoder = decoder_class(latent_dim, output_size, dropout)
         # Example input array needed for visualizing the graph of the network
-        self.test_input = [torch.randn(batch_size, 12, input_size), torch.randn(batch_size, 12, output_size)] 
+        self.test_input = [torch.randn(1, 12, input_size), torch.randn(1, 12, output_size)] 
 
         self.init_weights()
 
@@ -244,12 +244,12 @@ class Forecaster(pl.LightningModule):
         h0 = torch.empty(2, x.size(0), self.latent_dim)
         # Initialize cell state
         c0 = torch.empty(2, x.size(0), self.latent_dim)
-        y, (_, _) = self.autoencoder.encoder(x)
+        y, (h1, _) = self.autoencoder.encoder(x)
         x = torch.cat((x, y), dim=-1)
         x, (_, _) = self.lstm(x, (h0, c0))
         x = self.act_fn(x)
         x = self.linear(x)
-        x = self.act_fn(x)
+        # x = self.act_fn(x)
         return self.linear_out(x)
 
     def configure_optimizers(self):
@@ -275,7 +275,8 @@ class Forecaster(pl.LightningModule):
         self.log('test_loss', loss)
 
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
-        inputs, target = batch[0].unsqueeze(0), batch[1].unsqueeze(0)
+        inputs, _ = batch
+        inputs = inputs.unsqueeze(0)
         features = self.autoencoder(inputs)
         preds = self(inputs)
         return torch.cat((preds, features[:,:,1:]),dim=-1)
