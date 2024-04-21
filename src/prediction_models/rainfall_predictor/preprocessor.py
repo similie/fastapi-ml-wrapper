@@ -118,3 +118,15 @@ def impute_vals(X: pd.DataFrame) -> pd.DataFrame:
     imputer = SimpleImputer(missing_values=np.nan)
     X[num_cols] = imputer.fit_transform(X[num_cols].values)
     return X
+
+def generate_time_lags(df: pd.DataFrame, 
+                        value: str, 
+                        n_lags: int) -> pd.DataFrame:
+    df_n = df.copy()
+    for n in range(1, n_lags + 1):
+        lagged_values = list(df_n[value].shift(n))
+        
+        df_n = pd.concat([pd.Series(lagged_values, name=f"lag{n}",index=df_n.index), df_n],axis=1)
+    # Remove the first n rows where no 'previous' value is attainable for the number of lags
+    df_n = df_n.iloc[n_lags:]
+    return df_n

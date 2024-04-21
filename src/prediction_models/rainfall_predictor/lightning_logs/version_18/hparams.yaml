@@ -1,7 +1,0 @@
-act_fn: !!python/name:torch.nn.modules.activation.Tanh ''
-ae_checkpoint_path: /home/leigh/Code/ekoh/similie/src/prediction_models/rainfall_predictor/results/AE_model64/version_0/checkpoints/epoch=2-step=215811.ckpt
-autoencoder_class: !!python/name:layers.model.Autoencoder ''
-dropout: 0.5
-input_size: 7
-latent_dim: 64
-output_size: 1
