@@ -1,11 +1,10 @@
+
 import json
 import pandas as pd
 import numpy as np
-
-from AllWeatherConfig import AllWeatherMLConfig
+import pickle
 
 from sklearn.impute import SimpleImputer
-
 from tqdm.auto import tqdm
 """
 Needed for imports from
@@ -13,9 +12,18 @@ from json and csv without
 pydantic validation.    
 """
 
-config = AllWeatherMLConfig()
-groupby_col = config.experiment_config.groupby_col
-cols = groupby_col + ["date"] + config.experiment_config.features
+cols = [ 
+    "station",
+  #  "date",
+    "precipitation",
+  #  "lag1",
+    "temperature",
+    "humidity",
+    "pressure",
+    "wind_speed",
+    "wind_direction",
+    "solar",
+]
 
 agg_dict = {
     "station": "ffill",
@@ -52,7 +60,7 @@ def load_data_csv(data_dir: str,
             for chunk in tqdm(
                 pd.read_csv(
                     data_dir,
-                    usecols=cols,
+                    usecols=[x for x in cols if x != 'lag1'],
                     dtype=type_dict,
                     skipinitialspace=True,
                     chunksize=1000,
@@ -65,30 +73,21 @@ def load_data_csv(data_dir: str,
     df = df[df.station != '27']
     return df
 
-def load_dataframe(df: list | pd.DataFrame) -> dict:
+def load_dataframe(df: list | pd.DataFrame) -> pd.DataFrame:
     if isinstance(df, list):
         df = pd.DataFrame(df)
-    df = df.reindex(columns=cols)
-    df[groupby_col] = df[groupby_col].astype('str')
-    df = duplicate_datetime(df.copy())
-    df = set_dt_index(df.copy())
-    df = df[(df.index.year.isin([2020, 2021, 2022, 2023, 2024]))].copy()
+    df.station = df.station.astype('str')
+    df = duplicate_datetime(df)
+    df = set_dt_index(df)
     df = negatives(df)
     df = outliers(df)
-    df = sample_interp(df, agg_dict)
     df = impute_vals(df)
-    df = df.dropna()
-    return {s[0]: _df.drop(groupby_col, axis=1) 
-        for s, _df in df.groupby(groupby_col)}
+    df = df.reindex(columns=cols)
+    df = rainy_season(df)
+    return df
     
 def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
     df.set_index("date", inplace=True)
-    return df
-
-def sample_interp(df, agg_dict):
-    df = df.resample('10min').first()
-    df = df.resample('h').agg(agg_dict)
-    df.index = df.index.to_period('h')
     return df
 
 def duplicate_datetime(df: pd.DataFrame, datetime_col="date") -> pd.DataFrame:
@@ -108,7 +107,7 @@ def negatives(X: pd.DataFrame) -> pd.DataFrame:
 
 def outliers(X: pd.DataFrame) -> pd.DataFrame:
     num_cols = X.select_dtypes(include=np.number).columns.to_list()
-    mask = X[num_cols] > X[num_cols].quantile(0.95)
+    mask = X[num_cols] > X[num_cols].quantile(0.999)
     X[mask] = np.nan
     return X
 
@@ -130,3 +129,8 @@ def generate_time_lags(df: pd.DataFrame,
     # Remove the first n rows where no 'previous' value is attainable for the number of lags
     df_n = df_n.iloc[n_lags:]
     return df_n
+
+def rainy_season(df):
+    mask = df.index.month.isin([12, 1, 2, 3, 4])
+    df['rainy_season'] = mask.astype('int')
+    return df
