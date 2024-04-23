@@ -41,7 +41,7 @@ class AllWeatherMLConfig(BaseSettings):
 @lru_cache
 def getAllWeatherConfig():
     '''
-    Lazy load all weather config
+   Lazy load all weather config
     '''
     return AllWeatherConfig()
 

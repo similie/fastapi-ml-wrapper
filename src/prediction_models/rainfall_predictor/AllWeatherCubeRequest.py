@@ -2,11 +2,11 @@ from pydantic import Field
 from os import path
 import sys
 # sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
-from interfaces.CubeJsQuery import TimeDimension, CubeQuery, QueryFilter
-from interfaces.CubeJsQueryResponse import QueryMeasures
-from interfaces.CubeJsQueryRequest import CubeQueryRequest
+from ...interfaces.CubeJsQuery import TimeDimension, CubeQuery, QueryFilter
+from ...interfaces.CubeJsQueryResponse import QueryMeasures
+from ...interfaces.CubeJsQueryRequest import CubeQueryRequest
 # sys.path.append(path.dirname(path.abspath(__file__)))
-from AllWeatherConfig import getAllWeatherConfig
+from .AllWeatherConfig import getAllWeatherConfig
 
 
 class AllWeatherQueryMeasures(QueryMeasures):

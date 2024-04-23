@@ -8,6 +8,12 @@ from sklearn.preprocessing import StandardScaler, MaxAbsScaler, OneHotEncoder
 
 from tqdm.auto import tqdm
 
+from .AllWeatherConfig import getAllWeatherMLConfig
+
+config = getAllWeatherMLConfig()
+features = config.experiment_config.features
+target = config.experiment_config.target_col
+
 def load_dataframe(df: list | pd.DataFrame) -> pd.DataFrame:
     if isinstance(df, list):
         df = pd.DataFrame(df)
@@ -18,7 +24,7 @@ def load_dataframe(df: list | pd.DataFrame) -> pd.DataFrame:
     df = negatives(df)
     df = outliers(df)
     df = impute_vals(df)
-    df = df.reindex(columns=cols)
+    df = df.reindex(columns=features)
     df = rainy_season(df)
     df = df.dropna()
     return df
