@@ -8,3 +8,5 @@ We are committed to developing open-source technologies that are accessible and 
 ## Project documentation
 The docs for the repo are [in the wiki](https://github.com/similie/fastapi-ml-wrapper/wiki) where you can find out more about the aims of the project, how the code is organised & how to contribute.
 
+## Test coverage  
+Go to [actions](https://github.com/similie/fastapi-ml-wrapper/actions), choose the latest run, then in the `jobs` menu on the left hand side, pick `build`, find the 'Test with pytest' action and expand the caret to the left. This will reveal the code coverage report for the build.  
