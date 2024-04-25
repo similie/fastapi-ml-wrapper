@@ -55,7 +55,7 @@ def max_transform(y: np.array):
         return y_s
     else:
         maxabs = MaxAbsScaler()
-        y_s = maxabs.fit_transform(y.reshape(-1, y.shape[-1])).reshape(y.shape)
+        maxabs.fit(y.reshape(-1, y.shape[-1]))
         pickle.dump(maxabs, open(mx_path, 'wb'))
         return y_s     
 
@@ -73,7 +73,7 @@ def standard_transform(X_: np.array):
         return X_s
     else:
         standard = StandardScaler()
-        X_s = standard.fit_transform(X.reshape(-1,X.shape[-1])).reshape(X.shape)
+        standard.fit(X.reshape(-1,X.shape[-1]))
         pickle.dump(standard, open(st_path, 'wb'))
         return X_s  
        

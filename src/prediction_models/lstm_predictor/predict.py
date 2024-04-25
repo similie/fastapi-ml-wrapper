@@ -53,4 +53,5 @@ if __name__ == "__main__":
         data = d['data']
         pr_data = data[data.station == '61'].iloc[-700:-500, :]
         predictions = predict(pr_data)
-        print(predictions)
+        preds = rescale_predictions(predictions)
+        print(preds)
