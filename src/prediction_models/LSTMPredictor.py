@@ -12,6 +12,7 @@ from .lstm_predictor.PredictionPostRequests import (
 from .lstm_predictor.AllWeatherCubeRequest import AllWeatherQueryMeasures
 from .lstm_predictor.AllWeatherCubeResponse import AllWeatherQueryMeasuresResponse
 from .lstm_predictor.predict import predict
+from .lstm_predictor.utils import compute_stochastic_dropout
 
 class LSTMPredictor(BasePredictor):
     '''
@@ -115,3 +116,34 @@ class LSTMPredictor(BasePredictor):
             data=predictions
         )
 
+    async def compute_model_error(
+            self,
+            payload: CubePredictionPostRequest | ForecastPredictionPostRequest,
+            taskManager: BackgroundTasks | None
+            ):
+        payloadModel = self.guardPredictionPayload(payload)
+        # TODO branch here for inference inline (or in background if webhook supplied)
+        # For straight inference, return a ForecastPredictionPostResponse. If a webhook
+        # was supplied, return a BackgroundTaskResponse and add result data to the
+        # WebhookResponse instance, returned via `sendWebhookIfNeeded`
+
+        data: list[AllWeatherQueryMeasuresResponse]
+        if isinstance(payloadModel, CubePredictionPostRequest):
+            cubeResult = await self.__loadCubeJson(payloadModel)
+            data = cubeResult.data
+        else:
+            data = payloadModel.data
+        # request Data is now either the input weather forcast or station measurements
+
+        pdData = [item.model_dump(by_alias=True) for item in data]
+        dataFrame = pd.DataFrame(pdData)
+        # pass [data] into model for inference
+        scores, mean_error, std_error = compute_stochastic_dropout(
+            data=dataFrame,
+        )
+
+        return DataTaskResponse(
+            status=200,
+            message=f'Inference in {self.__class__.__name__},count:{len(predictions[0].data)}',
+            data=predictions
+        )

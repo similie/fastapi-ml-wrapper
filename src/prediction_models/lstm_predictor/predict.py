@@ -18,6 +18,11 @@ accelerator = config.trainer_config.accelerator
 if accelerator == 'cpu':
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
+def rescale_predictions(predictions: np.array):
+    p = predictions.copy()
+    _indices = p > p.max()*0.70
+    p[_indices] = p[_indices]*3.3
+    return p
 
 def predict(weather_data):
     encoder = reload_model('encoder.keras')
@@ -29,13 +34,11 @@ def predict(weather_data):
     X_x = standard_transform(X_p)
     X_o = onehot_transform(X_p)
     X_s = np.concatenate((X_x, X_o), axis=-1)
-    y_s = max_inverse_transform(y_p)
     X_s_ = concatenate_latent_representation(encoder, X_s)
 
     predictions = fc_model.predict(X_s_)
-    preds = max_inverse_transform(predictions)
-
-    mse = ((preds - y_s)**2).mean(axis=0)
+    preds = rescale_predictions(predictions)
+    mse = ((preds - y_p)**2).mean(axis=0)
 
     print("\n\nMSE: ", mse[0].round(5), "\n")
     print("Summary:\n\n", data.describe())
