@@ -19,7 +19,12 @@ accelerator = config.trainer_config.accelerator
 if accelerator == 'cpu':
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-def predict(weather_data):
+
+def predict(weather_data: list[str]):
+    """
+    Load pretrained models and generate predictions
+    from input data (json)
+    """
     encoder = reload_model('encoder.keras')
     fc_model = reload_model('forecaster.keras')
     
