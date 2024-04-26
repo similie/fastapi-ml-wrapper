@@ -1,14 +1,16 @@
 import os
+from os import path
 import json
+import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from os import path
 from tensorflow.keras.models import *
 from tensorflow.keras.layers import *
 from tensorflow.keras.callbacks import *
 
-from .AllWeatherConfig import getAllWeatherMLConfig
+from sklearn.metrics import mean_absolute_error
+from AllWeatherConfig import getAllWeatherMLConfig
 
 config = getAllWeatherMLConfig()
 
@@ -35,8 +37,15 @@ def plot_predictions(preds: any, target: any = None):
     plt.savefig('./plots/predictions.pdf')
 
 def reload_model(filename: str):
-    p = path.join(pretrain_path, filename)    
-    return tf.keras.models.load_model(p)
+    p = path.abspath(path.join(pretrain_path, 
+        filename))    
+    model = tf.keras.models.load_model(p)
+    if len(model.layers) > 2:
+        for l in model.layers:
+            l.trainable = False
+    else:
+        model.layers[0].trainable = False
+    return model
 
 def concatenate_latent_representation(encoder: any,
                                       X: np.array,
@@ -58,3 +67,9 @@ def compute_stochastic_dropout(model: any, X_test, y_test):
 
 def jsonify_ndarray(arr: np.array): 
     return json.dumps(arr.tolist(), cls=NumpyEncoder)
+
+def rescale_predictions(predictions: np.array):
+    p = predictions.copy()
+    _indices = p > p.max()*0.70
+    p[_indices] = p[_indices]*3.2
+    return p

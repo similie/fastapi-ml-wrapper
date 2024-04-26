@@ -17,8 +17,8 @@ target = config.experiment_config.target_col
 def load_dataframe(df: list | pd.DataFrame) -> pd.DataFrame:
     if isinstance(df, list):
         df = pd.DataFrame(df)
-    # df['station'] = df['station'].astype('int')
-    df['station'] = df['station'].astype('str')
+    if "station" in df.columns.to_list():
+        df['station'] = df['station'].astype('str')
     df = duplicate_datetime(df.copy())
     df = set_dt_index(df.copy())
     df = negatives(df)
@@ -66,4 +66,3 @@ def rainy_season(df):
     mask = df.index.month.isin([12, 1, 2, 3, 4])
     df['rainy_season'] = mask.astype('int')
     return df
-

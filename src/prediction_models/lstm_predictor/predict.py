@@ -8,7 +8,8 @@ from .dataset import (gen_pred_dataset,
 from .preprocessor import load_dataframe
 from .utils import (reload_model, 
                     plot_predictions,
-                    concatenate_latent_representation)
+                    concatenate_latent_representation,
+                    rescale_predictions)
 from .AllWeatherConfig import getAllWeatherMLConfig
 
 config = getAllWeatherMLConfig()
@@ -17,12 +18,6 @@ accelerator = config.trainer_config.accelerator
 
 if accelerator == 'cpu':
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-
-def rescale_predictions(predictions: np.array):
-    p = predictions.copy()
-    _indices = p > p.max()*0.70
-    p[_indices] = p[_indices]*3.3
-    return p
 
 def predict(weather_data):
     encoder = reload_model('encoder.keras')
@@ -45,13 +40,3 @@ def predict(weather_data):
 
     payload = jsonify_ndarray(preds)
     return payload
-
-if __name__ == "__main__":
-
-    with open('./tmp/all_weather_cube_query_response.json') as f:
-        d = json.load(f)
-        data = d['data']
-        pr_data = data[data.station == '61'].iloc[-700:-500, :]
-        predictions = predict(pr_data)
-        preds = rescale_predictions(predictions)
-        print(preds)
