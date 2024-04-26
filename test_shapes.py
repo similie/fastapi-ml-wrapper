@@ -1,16 +1,12 @@
 
 import json
-from os import path, getcwd
-from datetime import date
 import numpy as np
-import pandas as pd
 from src.prediction_models.lstm_predictor.dataset import (gen_pred_dataset,
     standard_transform,
     onehot_transform,
     max_inverse_transform)
 from src.prediction_models.lstm_predictor.preprocessor import load_dataframe
-from src.prediction_models.lstm_predictor.utils import (reload_model, 
-    plot_predictions,
+from src.prediction_models.lstm_predictor.utils import (reload_model,
     concatenate_latent_representation,
     compute_stochastic_dropout,
     rescale_predictions)
@@ -27,7 +23,7 @@ if __name__ == "__main__":
     config = getAllWeatherMLConfig()
     prediction_window = config.experiment_config.prediction_window
     # Load model checkpoints
-    
+
     encoder = reload_model('encoder.keras')
     fc_model = reload_model('forecaster.keras')
 
