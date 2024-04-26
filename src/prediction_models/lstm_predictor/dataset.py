@@ -3,7 +3,6 @@ import pickle
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import (StandardScaler,
-                                   RobustScaler,
                                    MinMaxScaler,
                                    MaxAbsScaler)
 from .AllWeatherConfig import getAllWeatherMLConfig
@@ -18,7 +17,9 @@ def gen_sequence(df, sequence_length, seq_cols):
     numerical_data = df[seq_cols].values
     num_elements = numerical_data.shape[0]
 
-    for start, stop in zip(range(0, num_elements-sequence_length), range(sequence_length, num_elements)):
+    for start, stop in zip(range(0,
+        num_elements-sequence_length),
+        range(sequence_length, num_elements)):
         yield numerical_data[start:stop, :]
 
 
@@ -61,7 +62,7 @@ def groupdf(df):
 
 def max_transform(y: np.array):
     """
-    Loads the fitted normalizer to scale the 
+    Loads the fitted normalizer to scale the
     input data target to unit scale.
     """
     mx_path = path.join('./pickle', 'maxabs.pkl')
@@ -73,12 +74,12 @@ def max_transform(y: np.array):
         maxabs = MaxAbsScaler()
         maxabs.fit(y.reshape(-1, y.shape[-1]))
         pickle.dump(maxabs, open(mx_path, 'wb'))
-        return y_s     
+        return y_s
 
 
 def onehot_transform(R_: np.array):
     """
-    Replaces the rainy_season column with a 
+    Replaces the rainy_season column with a
     two-column one hot encoded feature. Rainy
     season must be the last feature.
     """

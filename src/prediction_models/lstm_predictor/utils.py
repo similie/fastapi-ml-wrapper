@@ -5,10 +5,6 @@ import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-# from tensorflow.keras.models import *
-# from tensorflow.keras.layers import *
-# from tensorflow.keras.callbacks import *
-
 from sklearn.metrics import mean_absolute_error
 from AllWeatherConfig import getAllWeatherMLConfig
 
@@ -51,12 +47,12 @@ def reload_model(filename: str):
     load .keras model checkpoint from the 
     pretrain_path set in the config.
     """
-    p = path.abspath(path.join(pretrain_path, 
+    p = path.abspath(path.join(pretrain_path,
         filename))    
     model = tf.keras.models.load_model(p)
     if len(model.layers) > 2:
-        for l in model.layers:
-            l.trainable = False
+        for layer in model.layers:
+            layer.trainable = False
     else:
         model.layers[0].trainable = False
     return model
@@ -72,10 +68,10 @@ def concatenate_latent_representation(encoder: any,
     """
     with tf.device(device_name):
         X_ = np.concatenate([X,
-        encoder.predict(X)], axis=-1)
+            encoder.predict(X)], axis=-1)
         if isinstance(y, np.ndarray):
             y_ = np.concatenate([y,
-            encoder.predict(y)], axis=-1)
+                encoder.predict(y)], axis=-1)
             return X_, y_
         return X_
 
@@ -86,7 +82,7 @@ def compute_stochastic_dropout(model: any, X_test, y_test):
     error. see https://arxiv.org/pdf/1506.02142.pdf
     """
     scores = []
-    for i in tqdm(range(0,20)):
+    for i in tqdm(range(0, 20)):
         scores.append(mean_absolute_error(y_test, model.predict(X_test).ravel()))
     return scores, np.mean(scores), np.std(scores)
 

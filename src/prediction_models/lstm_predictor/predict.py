@@ -2,22 +2,19 @@ import os
 import numpy as np
 import pandas as pd
 from .dataset import (gen_pred_dataset,
-                    standard_transform,
-                    onehot_transform,
-                    max_inverse_transform)
+    standard_transform,
+    onehot_transform,
+    max_inverse_transform)
 from .preprocessor import load_dataframe
 from .utils import (reload_model, 
-                    plot_predictions,
-                    concatenate_latent_representation,
-                    rescale_predictions)
+    concatenate_latent_representation,
+    rescale_predictions,
+    jsonify_ndarray)
 from .AllWeatherConfig import getAllWeatherMLConfig
 
 config = getAllWeatherMLConfig()
 prediction_window = config.experiment_config.prediction_window
 accelerator = config.trainer_config.accelerator
-
-if accelerator == 'cpu':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
 def predict(weather_data: list[str]):

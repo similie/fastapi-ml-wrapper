@@ -1,13 +1,6 @@
-import json
 import pandas as pd
 import numpy as np
-import pickle
-
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler, MaxAbsScaler, OneHotEncoder
-
-from tqdm.auto import tqdm
-
 from .AllWeatherConfig import getAllWeatherMLConfig
 
 config = getAllWeatherMLConfig()
@@ -49,7 +42,7 @@ def duplicate_datetime(df: pd.DataFrame, datetime_col="date") -> pd.DataFrame:
     Space out duplicate date times by an added millisecond. 
     """
     df[datetime_col] = pd.to_datetime(df[datetime_col],
-                                        format='mixed')
+        format='mixed')
 
     delta = pd.to_timedelta(df.groupby("date").cumcount(), unit="ms")
     df.date = df.date + delta.values
@@ -83,7 +76,6 @@ def impute_vals(X: pd.DataFrame) -> pd.DataFrame:
     Shouldn't be needed.
     """
     num_cols = X.select_dtypes(include=np.number).columns.to_list()
-    other = X.select_dtypes(exclude=np.number).columns.to_list()
     imputer = SimpleImputer(missing_values=np.nan)
     X[num_cols] = imputer.fit_transform(X[num_cols].values)
     return X
