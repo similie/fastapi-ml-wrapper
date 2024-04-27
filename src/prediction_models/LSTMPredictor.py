@@ -1,4 +1,5 @@
 from typing import Any
+import pandas as pd
 from fastapi import BackgroundTasks
 from pydantic import BaseModel
 from .BasePredictor import BasePredictor

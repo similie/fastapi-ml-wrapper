@@ -1,4 +1,3 @@
-
 import json
 from os import path, getcwd
 from datetime import date
@@ -14,7 +13,7 @@ from src.prediction_models.lstm_predictor.utils import (reload_model,
     concatenate_latent_representation,
     compute_stochastic_dropout,
     rescale_predictions)
-from src.prediction_models.lstm_predictor.AllWeatherConfig import getAllWeatherConfig
+from src.prediction_models.lstm_predictor.AllWeatherConfig import getAllWeatherMLConfig
 from src.interfaces.CubeJsQueryRequest import CubeQueryRequest
 from src.prediction_models.rainfall_predictor.AllWeatherCubeRequest import makeAllWeatherQueryReq
 from src.prediction_models.rainfall_predictor.PredictionPostRequests import CubePredictionPostRequest
@@ -26,8 +25,8 @@ if __name__ == "__main__":
     # of model inputs and datasets
     config = getAllWeatherMLConfig()
     prediction_window = config.experiment_config.prediction_window
-    # Load model checkpoints
     
+    # Load model checkpoints
     encoder = reload_model('encoder.keras')
     fc_model = reload_model('forecaster.keras')
 
@@ -35,10 +34,12 @@ if __name__ == "__main__":
     with open('./tmp/all_weather_cube_query_response.json') as f:
         d = json.load(f)
         weather_data = d['data']
+    
     # load test data
     data = load_dataframe(weather_data)
     pr_data = data[data.station == '61'].iloc[-700:-500, :]
     X_p, y_p = gen_pred_dataset(pr_data, prediction_window)
+    
     # test shape of concatenated latent space `X_s_`
     X_x = standard_transform(X_p)
     X_o = onehot_transform(X_p)
@@ -46,5 +47,5 @@ if __name__ == "__main__":
     y_s = max_inverse_transform(y_p)
     X_s_ = concatenate_latent_representation(encoder, X_s)
 
-    
-    
+    assert encoder.layers[0].input_shape[1:] == X_x.shape[1:]
+    assert fc_model.layers[0].batch_shape[1:] == X_s_.shape[1:]

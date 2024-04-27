@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from sklearn.metrics import mean_absolute_error
-from AllWeatherConfig import getAllWeatherMLConfig
+from .AllWeatherConfig import getAllWeatherMLConfig
 
 config = getAllWeatherMLConfig()
 

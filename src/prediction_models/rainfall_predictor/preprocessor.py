@@ -10,7 +10,9 @@ target = config.experiment_config.target_col
 
 def load_dataframe(df: list | pd.DataFrame) -> pd.DataFrame:
     """
-    Ingest json or dataframe for predictions.
+    Ingest json or dataframe for predictions. Gets
+    features from the config (the dotEnv file) in 
+    project root.
     """
     if isinstance(df, list):
         df = pd.DataFrame(df)
@@ -29,7 +31,7 @@ def load_dataframe(df: list | pd.DataFrame) -> pd.DataFrame:
 
 def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Convert date column to datetime and set it as 
+    Convert date column to datetime and set it as
     index.
     """
     df['date'] = pd.to_datetime(df['date'])
@@ -39,7 +41,7 @@ def set_dt_index(df: pd.DataFrame) -> pd.DataFrame:
 
 def duplicate_datetime(df: pd.DataFrame, datetime_col="date") -> pd.DataFrame:
     """
-    Space out duplicate date times by an added millisecond. 
+    Space out duplicate date times by an added millisecond.
     """
     df[datetime_col] = pd.to_datetime(df[datetime_col],
         format='mixed')
@@ -72,7 +74,7 @@ def outliers(X: pd.DataFrame) -> pd.DataFrame:
 
 def impute_vals(X: pd.DataFrame) -> pd.DataFrame:
     """
-    Impute missing values with simple interpolation. 
+    Impute missing values with simple interpolation.
     Shouldn't be needed.
     """
     num_cols = X.select_dtypes(include=np.number).columns.to_list()

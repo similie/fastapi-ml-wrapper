@@ -9,8 +9,8 @@ from src.prediction_models.lstm_predictor.dataset import (gen_pred_dataset,
     onehot_transform,
     max_transform,
     max_inverse_transform)
-from src.prediction_models.lstm_predictor.preprocessor import load_dataframe
-from src.prediction_models.lstm_predictor.utils import (reload_model, 
+from src.prediction_models.rainfall_predictor.preprocessor import load_dataframe
+from src.prediction_models.rainfall_predictor.utils import (reload_model, 
     plot_predictions,
     concatenate_latent_representation,
     compute_stochastic_dropout,

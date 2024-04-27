@@ -7,7 +7,7 @@ from ..interfaces.ReqRes import BasePostRequest
 # even if they are not directly used. The references need to be in scope
 # or the factory function modelForPayload will fail to resolve.
 from .BasePredictor import BasePredictor
-from .LSTMPredictor import LSTMPredictor  # noqa
+from .RainfallPredictor import RainfallPredictor  # noqa
 from .TestPredictor import ATestPredictor  # noqa
 # from MyPredictor[.py] import MyPredictor[Class]  # noqa
 
@@ -27,7 +27,7 @@ from .TestPredictor import ATestPredictor  # noqa
 # - that class isn't a subclass of BasePredictor (for type narrowing)
 _allModels = {
     'test': 'ATestPredictor',
-    'lstm':'LSTMPredictor'
+    'rainfall_predictor': 'RainfallPredictor'
 }
 
 

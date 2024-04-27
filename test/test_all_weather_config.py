@@ -1,4 +1,4 @@
-import pytest
+# import pytest
 from src.prediction_models.rainfall_predictor.AllWeatherConfig import (
     AllWeatherConfig,
     getAllWeatherConfig,
