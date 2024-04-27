@@ -1,10 +1,10 @@
 from typing import Any
 import pytest
-from src.interfaces.ReqRes import (
+from ..src.interfaces.ReqRes import (
     BasePostRequest,
     WebhookRequest
 )
-from src.prediction_models.TestPredictor import ATestPredictor
+from ..src.prediction_models.TestPredictor import ATestPredictor
 
 
 def MockPostRequest() -> BasePostRequest:

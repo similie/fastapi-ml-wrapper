@@ -1,5 +1,5 @@
 import os
-from os import path
+from os import path, getcwd
 import json
 import tqdm
 import numpy as np
@@ -47,7 +47,8 @@ def reload_model(filename: str):
     load .keras model checkpoint from the 
     pretrain_path set in the config.
     """
-    p = path.abspath(path.join(pretrain_path,
+    p = path.abspath(path.join(getcwd(),
+        pretrain_path,
         filename))    
     model = tf.keras.models.load_model(p)
     if len(model.layers) > 2:

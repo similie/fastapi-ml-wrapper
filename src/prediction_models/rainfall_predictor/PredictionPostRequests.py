@@ -2,6 +2,7 @@ from datetime import datetime, date
 from pydantic import Field
 from ...interfaces.ReqRes import BasePostRequest, WebhookRequest
 from .AllWeatherCubeResponse import AllWeatherQueryMeasuresResponse
+from .AllWeatherCubeRequest import AllWeatherQueryMeasures
 
 
 class CubePredictionPostRequest(BasePostRequest):

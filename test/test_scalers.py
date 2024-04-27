@@ -1,35 +1,65 @@
 import json
-from src.prediction_models.rainfall_predictor.dataset import (gen_pred_dataset,
-    standard_transform,
-    standard_inverse_transform,
-    onehot_transform,
-    max_transform,
-    max_inverse_transform)
-from src.prediction_models.rainfall_predictor.preprocessor import load_dataframe
-from src.prediction_models.rainfall_predictor.AllWeatherConfig import getAllWeatherMLConfig
+from os import path, getcwd
+import pytest
+from ..src.interfaces.ReqRes import BasePostRequest
+from ..src.prediction_models import RainfallPredictor
+from ..src.prediction_models.rainfall_predictor.\
+    PredictionPostRequests import (ForecastPredictionPostRequest,
+    CubePredictionPostRequest)
 
-if __name__ == "__main__":
+# from ..src.prediction_models.\
+#     rainfall_predictor.AllWeatherConfig import (getAllWeatherMLConfig,
+#     getAllWeatherConfig)
 
-    # get prediction window to test shapes
-    # of model inputs and datasets
-    config = getAllWeatherMLConfig()
-    prediction_window = config.experiment_config.prediction_window
- 
-    # test data
-    with open('./tmp/all_weather_cube_query_response.json') as f:
-        d = json.load(f)
-        weather_data = d['data']
-    # load test data
-    data = load_dataframe(weather_data)
-    X_p, y_p = gen_pred_dataset(data, prediction_window)
-    # test shape of concatenated latent space `X_s_`
-    X_x = standard_transform(X_p)
-    X_o = onehot_transform(X_p)
-    X_inv = standard_inverse_transform(X_x)
-    y_s = max_transform(y_p)
-    y_inv = max_inverse_transform(y_s)
-    
-    assert X_inv == X_p
+# from ..src.prediction_models.rainfall_predictor.\
+#     PredictionPostRequests import ForecastPredictionPostRequest
+# from ..src.prediction_models.rainfall_predictor.\
+#     AllWeatherCubeResponse import (cleanCubeNameFromResponseKeys,
+#     AllWeatherCubeQueryResponse)
+# from ..src.prediction_models.rainfall_predictor.dataset import (standard_transform,
+#     max_transform, onehot_transform, gen_pred_dataset, max_inverse_transform,
+#     standard_inverse_transform)
+# from ..src.prediction_models.rainfall_predictor.preprocessor import load_dataframe
 
-    assert y_p == y_inv
-    
+
+# def loadJsonFixture():
+#     '''
+#     load the sample Json file to the Cube query resonse model format.
+#     '''
+#     p = path.join(getcwd(),
+#         'test',
+#         'fixtures', 
+#         'all_weather_cube_query_response.json')
+#     with open(p, 'r') as file:
+#         jsonData = json.load(file)
+#         return json.dumps(jsonData)
+
+# def serialise_to_ml():
+#     jsonData = loadJsonFixture()
+#     # cubeName = getAllWeatherConfig().cube_name
+#     cleanedJson = cleanCubeNameFromResponseKeys(jsonData)
+#     jsonData = json.loads(cleanedJson)
+#     model = AllWeatherCubeQueryResponse.model_validate(jsonData)
+#     return model.model_dump(by_alias=True)['data']
+
+# def test_scalers():
+#     """
+#     Provide a json object of sample test data to
+#     test the scaler functions.
+#     """
+#     data = serialise_to_ml()
+#     weather_data = load_dataframe(data)
+#     X, y = gen_pred_dataset(weather_data, 12)
+#     X_s = standard_transform(X)
+#     X_o = onehot_transform(X)
+#     y_s = max_transform(y)
+#     X_inv = standard_inverse_transform(X_s)
+#     y_inv = max_inverse_transform(y_s)
+
+#     assert X_s is not None
+#     assert X_o is not None
+#     assert y_s is not None
+
+#     assert X_inv == X
+#     assert y_inv == y
+

@@ -12,7 +12,7 @@ from .rainfall_predictor.PredictionPostRequests import (
 )
 from .rainfall_predictor.AllWeatherCubeRequest import AllWeatherQueryMeasures
 from .rainfall_predictor.AllWeatherCubeResponse import AllWeatherQueryMeasuresResponse
-from .rainfall_predictor.project.predict import predict
+from .rainfall_predictor.predict import predict
 
 class RainfallPredictor(BasePredictor):
     '''
@@ -104,13 +104,12 @@ class RainfallPredictor(BasePredictor):
         # request Data is now either the input weather forcast or station measurements
 
         pdData = [item.model_dump(by_alias=True) for item in data]
-        dataFrame = pd.DataFrame(pdData)
         # pass [data] into model for inference
         predictions = predict(
-            data=dataFrame,
+            data,
             # TODO: check if we should pass first or last date into Predictor.
-            startDateUTC=data[0].date,
-            predictTimeOffsetDays=3  # or get from config
+            # startDateUTC=data[0].date,
+            # predictTimeOffsetDays=3  # or get from config
         )
 
         return DataTaskResponse(

@@ -1,5 +1,5 @@
-# import pytest
-from src.prediction_models.rainfall_predictor.AllWeatherConfig import (
+import pytest
+from ..src.prediction_models.rainfall_predictor.AllWeatherConfig import (
     AllWeatherConfig,
     getAllWeatherConfig,
     AllWeatherMLConfig,
@@ -36,16 +36,20 @@ def test_all_weather_get_ml_config():
 def test_all_weather_ml_config_submodels():
     config = getAllWeatherMLConfig()
     assert config.experiment_config is not None
-    assert config.lstm_config is not None
     assert config.trainer_config is not None
 
 
 def test_all_weather_ml_config_settings():
     config = getAllWeatherMLConfig()
-    assert config.experiment_config.batch_size == 1
-    assert config.experiment_config.sequence_length == 12
-    assert config.lstm_config.batch_size == 1
-    assert config.lstm_config.sequence_length == 12
+    assert config.experiment_config.features == ["precipitation",
+        "temperature",
+        "humidity",
+        "pressure",
+        "wind_speed",
+        "wind_direction",
+        "solar"]
+    assert config.experiment_config.prediction_window == 12
+    assert config.experiment_config.target_col == ["precipitation"]
     # precision is e.g. 32, 64 etc.
-    assert pytest.approx(config.trainer_config.precision % 2) == 0
+    assert config.trainer_config.dtype == 'np.float32'
     assert len(config.trainer_config.accelerator) > 0

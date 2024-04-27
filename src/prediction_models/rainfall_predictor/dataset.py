@@ -1,4 +1,4 @@
-from os import path
+from os import path, getcwd
 import pickle
 import pandas as pd
 import numpy as np
@@ -9,8 +9,9 @@ from .AllWeatherConfig import getAllWeatherMLConfig
 
 config = getAllWeatherMLConfig()
 
-features = config.experiment_config.features
+features = config.experiment_config.features + ['rainy_season']
 target = config.experiment_config.target_col
+pretrain_path = config.trainer_config.pretrained_path
 
 
 def gen_sequence(df, sequence_length, seq_cols):
@@ -38,10 +39,10 @@ def gen_pred_dataset(df, sequence_length: int):
     X_pred, y_pred = [], []
 
     for station, _df in df.groupby(["station"]):
-        for seq in gen_sequence(_df, sequence_length, features):
+        for seq in gen_sequence(df, sequence_length, features):
             X_pred.append(seq)
 
-        for seq in gen_labels(_df, sequence_length, target):
+        for seq in gen_labels(df, sequence_length, target):
             y_pred.append(seq)
 
     X_pred = np.asarray(X_pred)
@@ -65,15 +66,19 @@ def max_transform(y: np.array):
     Loads the fitted normalizer to scale the
     input data target to unit scale.
     """
-    mx_path = path.join('./pickle', 'maxabs.pkl')
-    if path.isfile(mx_path):
-        maxabs = pickle.load(open(mx_path, 'rb'))
+    p = path.abspath(path.join(getcwd(),
+        pretrain_path,
+        '..',
+        'pickle',
+        'maxabs.pkl')) 
+    if path.isfile(p):
+        maxabs = pickle.load(open(p, 'rb'))
         y_s = maxabs.transform(y.reshape(-1, y.shape[-1])).reshape(y.shape)
         return y_s
     else:
         maxabs = MaxAbsScaler()
         maxabs.fit(y.reshape(-1, y.shape[-1]))
-        pickle.dump(maxabs, open(mx_path, 'wb'))
+        pickle.dump(maxabs, open(p, 'wb'))
         return y_s
 
 
@@ -93,16 +98,20 @@ def standard_transform(X_: np.array):
     Loads fitted standardscaler for the input
     data.
     """
-    st_path = path.join('./pickle', 'standard.pkl')
-    X = X_[:, :, :-1]           # remove rainy_season
-    if path.isfile(st_path):
-        standard = pickle.load(open(st_path, 'rb'))
+    p = path.abspath(path.join(getcwd(),
+        pretrain_path,
+        '..',
+        'pickle',
+        'standard.pkl'))    
+    X = X_[:, :, :-1]      
+    if path.isfile(p):
+        standard = pickle.load(open(p, 'rb'))
         X_s = standard.transform(X.reshape(-1, X.shape[-1])).reshape(X.shape)
         return X_s
     else:
         standard = StandardScaler()
         standard.fit(X.reshape(-1, X.shape[-1]))
-        pickle.dump(standard, open(st_path, 'wb'))
+        pickle.dump(standard, open(p, 'wb'))
         return X_s  
 
 
@@ -112,9 +121,13 @@ def max_inverse_transform(y: np.array):
     used in favor of our rescale_predictions
     function.
     """
-    mx_path = path.join('./pickle', 'maxabs.pkl')
-    if path.isfile(mx_path):
-        maxabs = pickle.load(open(mx_path, 'rb'))
+    p = path.abspath(path.join(getcwd(),
+        pretrain_path,
+        '..',
+        'pickle',
+        'maxabs.pkl'))
+    if path.isfile(p):
+        maxabs = pickle.load(open(p, 'rb'))
         y_s = maxabs.inverse_transform(y.reshape(-1, 1))
         return y_s
     else:
@@ -127,12 +140,15 @@ def standard_inverse_transform(X: np.array):
     Inverse transform features, removed one
     hot encoded rainy_season data. 
     """
-    st_path = path.join('./pickle', 'standard.pkl')
-    if path.isfile(st_path):
-        standard = pickle.load(open(st_path, 'rb'))
+    p = path.abspath(path.join(getcwd(),
+        pretrain_path,
+        '..',
+        'pickle',
+        'standard.pkl'))    
+    if path.isfile(p):
+        standard = pickle.load(open(p, 'rb'))
         X_s = standard.inverse_transform(X[:, :-2])
         return X_s
     else:
         print("Scaler not fitted.")
         return X
-    

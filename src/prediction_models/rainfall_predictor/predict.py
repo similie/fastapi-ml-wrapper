@@ -17,7 +17,7 @@ prediction_window = config.experiment_config.prediction_window
 accelerator = config.trainer_config.accelerator
 
 
-def predict(weather_data: list[str]):
+def predict(weather_data: any):
     """
     Load pretrained models and generate predictions
     from input data (json)
@@ -26,7 +26,7 @@ def predict(weather_data: list[str]):
     fc_model = reload_model('forecaster.keras')
     
     data = load_dataframe(weather_data)
-    X_p, y_p = gen_pred_dataset(weather_data, prediction_window)
+    X_p, y_p = gen_pred_dataset(data, prediction_window)
     
     X_x = standard_transform(X_p)
     X_o = onehot_transform(X_p)

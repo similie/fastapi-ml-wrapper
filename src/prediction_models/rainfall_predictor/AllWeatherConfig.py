@@ -19,28 +19,14 @@ class ExperimentConfig(BaseSettings):
     target_col: list[str]
     features: list[str]
     prediction_window: int = 12
-    sequence_length: int = 12
-    batch_size: str
-    groupby_col: list[str]
     
-class LstmConfig(BaseSettings):
-    '''
-    LSTM config settings, with .env namespace aliases
-    '''
-    model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='lstm_')
-    prefix: str
-    input_size: int
-    latent_dim: int
-    output_size: int = 1
-    dropout: float = 0.5
-
 class TrainerConfig(BaseSettings):
     '''
     Trainer config settings, with .env namespace aliases
     '''
     model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='trainer_')
     accelerator: str
-    torch_dtype: str
+    dtype: str
     pretrained_path: str
     num_workers: int
 
@@ -50,9 +36,7 @@ class AllWeatherMLConfig(BaseSettings):
     '''
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
     experiment_config: ExperimentConfig = ExperimentConfig()
-    lstm_config: LstmConfig = LstmConfig()
     trainer_config: TrainerConfig = TrainerConfig()
-    pretrain_path: str = './pretrained_checkpoints/'
 
 @lru_cache
 def getAllWeatherConfig():

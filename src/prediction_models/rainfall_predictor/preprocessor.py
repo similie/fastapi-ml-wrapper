@@ -4,7 +4,7 @@ from sklearn.impute import SimpleImputer
 from .AllWeatherConfig import getAllWeatherMLConfig
 
 config = getAllWeatherMLConfig()
-features = config.experiment_config.features
+features = ["station"] + config.experiment_config.features
 target = config.experiment_config.target_col
 
 
@@ -16,8 +16,7 @@ def load_dataframe(df: list | pd.DataFrame) -> pd.DataFrame:
     """
     if isinstance(df, list):
         df = pd.DataFrame(df)
-    if "station" in df.columns.to_list():
-        df['station'] = df['station'].astype('str')
+    df['station'] = df['station'].astype('str')
     df = duplicate_datetime(df.copy())
     df = set_dt_index(df.copy())
     df = negatives(df)

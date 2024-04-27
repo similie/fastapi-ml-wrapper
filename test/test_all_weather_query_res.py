@@ -1,15 +1,17 @@
 import json
 from os import path, getcwd
-from src.prediction_models.rainfall_predictor.AllWeatherConfig import getAllWeatherConfig
-from src.prediction_models.rainfall_predictor.AllWeatherCubeResponse import AllWeatherCubeQueryResponse
-from src.prediction_models.rainfall_predictor.AllWeatherCubeResponse import cleanCubeNameFromResponseKeys
+from ..src.prediction_models.rainfall_predictor.AllWeatherConfig import getAllWeatherConfig
+from ..src.prediction_models.rainfall_predictor.AllWeatherCubeResponse import AllWeatherCubeQueryResponse
+from ..src.prediction_models.rainfall_predictor.AllWeatherCubeResponse import cleanCubeNameFromResponseKeys
 
 
 def loadJsonFixture():
     '''
     load the sample Json file to the Cube query resonse model format.
     '''
-    p = path.join(getcwd(), 'test', 'fixtures', 'all_weather_cube_query_response.json')
+    p = path.join(getcwd(), 'test', 
+        'fixtures', 
+        'all_weather_cube_query_response.json')
     with open(p, 'r') as file:
         jsonData = json.load(file)
         return json.dumps(jsonData)

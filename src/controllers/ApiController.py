@@ -1,6 +1,6 @@
 # from time import sleep
 from fastapi import APIRouter, Response, BackgroundTasks
-from app.config import getConfig
+from ...app.config import getConfig
 from ..prediction_models.AllModelsService import (
     getModelNames,
     ensureValidModelName,

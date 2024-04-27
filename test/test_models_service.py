@@ -1,6 +1,6 @@
 import pytest
-from src.interfaces.ReqRes import BasePostRequest
-from src.prediction_models.AllModelsService import (
+from ..src.interfaces.ReqRes import BasePostRequest
+from ..src.prediction_models.AllModelsService import (
     getModelNames,
     modelForPayload,
     ensureValidModelName
