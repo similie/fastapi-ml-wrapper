@@ -24,7 +24,15 @@ This initial attempt was trialed in Timor-Leste where the lack of adequate weath
 The event  data was recorded by weather stations owned  by GoTL and Similie.
 
 ![image](https://user-images.githubusercontent.com/29231033/113271869-f2adba00-9315-11eb-881b-6307b4ba3d9a.png)
-
+  
+## Super Quick Start
+To see the project running locally in a Docker container  
+1. Clone the repo
+2. In a terminal window at the project root, type: `docker compose up`
+  
+When the container has finished building, open a browser and navigate to `http://localhost:5002/api/v1/` or check the api docs at 
+`http://localhost:5002/docs`  
+  
 ## Developer Quick Start
 The development environment uses Python 3.12, it is strongly recommended that you use a virtual environment for development.  
 1. Clone the repo
@@ -34,4 +42,6 @@ The development environment uses Python 3.12, it is strongly recommended that yo
 5. Test the webservice is running by opening a browser and navigating to `http://localhost:5002/api/v1/`
 6. Checkout a new branch and start coding :) 
   
-API Endpoint documentation is automatically published via the Starlette/FastAPI OpenAPI documentation process to `http://localhost:5002/docs` in a running developer environment.
+API Endpoint documentation is automatically published via the Starlette/FastAPI OpenAPI documentation process to `http://localhost:5002/docs` in a running developer environment.  
+  
+Check [the issues](https://github.com/similie/fastapi-ml-wrapper/issues) and [the wiki](https://github.com/similie/fastapi-ml-wrapper/wiki) if you want to contribute. 🫶  
