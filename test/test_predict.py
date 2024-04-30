@@ -1,4 +1,3 @@
-
 import json
 from os import path, getcwd
 import pytest
