@@ -1,4 +1,4 @@
-from ..app.config import ConfigSettings, getConfig
+from app.config import ConfigSettings, getConfig
 
 
 def test_app_config():

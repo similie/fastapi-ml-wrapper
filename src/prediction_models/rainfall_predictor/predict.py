@@ -1,16 +1,14 @@
-import os
 import numpy as np
-import pandas as pd
-from .dataset import (gen_pred_dataset,
-    standard_transform,
-    onehot_transform,
-    max_inverse_transform)
+from .dataset import (gen_pred_dataset, standard_transform, onehot_transform)
 from .preprocessor import load_dataframe
-from .utils import (reload_model, 
+from .utils import (
+    reload_model,
     concatenate_latent_representation,
     rescale_predictions,
-    jsonify_ndarray)
+    jsonify_ndarray
+)
 from .AllWeatherConfig import getAllWeatherMLConfig
+
 
 config = getAllWeatherMLConfig()
 prediction_window = config.experiment_config.prediction_window
@@ -24,10 +22,10 @@ def predict(weather_data: any):
     """
     encoder = reload_model('encoder.keras')
     fc_model = reload_model('forecaster.keras')
-    
+
     data = load_dataframe(weather_data)
     X_p, y_p = gen_pred_dataset(data, prediction_window)
-    
+
     X_x = standard_transform(X_p)
     X_o = onehot_transform(X_p)
     X_s = np.concatenate((X_x, X_o), axis=-1)

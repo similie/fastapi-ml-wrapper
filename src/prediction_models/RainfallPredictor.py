@@ -1,7 +1,6 @@
 from typing import Any
 from fastapi import BackgroundTasks
 from pydantic import ValidationError
-import pandas as pd
 from .BasePredictor import BasePredictor
 from ..interfaces.ReqRes import TemplateResponse, DataTaskResponse
 # (BackgroundTaskResponse, WebhookRequest, WebhookResponse)
@@ -14,12 +13,13 @@ from .rainfall_predictor.AllWeatherCubeRequest import AllWeatherQueryMeasures
 from .rainfall_predictor.AllWeatherCubeResponse import AllWeatherQueryMeasuresResponse
 from .rainfall_predictor.predict import predict
 
+
 class RainfallPredictor(BasePredictor):
     '''
     Implementation class of abstract BasePredictor with typed Payloads
     '''
-    def __init__(self, payload) -> None:
-        super().__init__(payload)
+    # def __init__(self, payload) -> None:
+    #     super().__init__(payload)
 
     async def template(self) -> TemplateResponse:
         t = await super().template()
@@ -101,12 +101,11 @@ class RainfallPredictor(BasePredictor):
             data = cubeResult.data
         else:
             data = payloadModel.data
-        # request Data is now either the input weather forcast or station measurements
 
-        pdData = [item.model_dump(by_alias=True) for item in data]
+        # request `data` is now either the input weather forcast or station measurements
         # pass [data] into model for inference
         predictions = predict(
-            data,
+            data
             # TODO: check if we should pass first or last date into Predictor.
             # startDateUTC=data[0].date,
             # predictTimeOffsetDays=3  # or get from config

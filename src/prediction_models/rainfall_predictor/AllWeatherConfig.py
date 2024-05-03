@@ -1,7 +1,8 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
+
 
 class AllWeatherConfig(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
@@ -11,6 +12,7 @@ class AllWeatherConfig(BaseSettings):
     cube_port: int = 4000
     cube_auth_key: str = ''
 
+
 class ExperimentConfig(BaseSettings):
     '''
     Experiments config settings, with .env namespace aliases
@@ -19,7 +21,8 @@ class ExperimentConfig(BaseSettings):
     target_col: list[str]
     features: list[str]
     prediction_window: int = 12
-    
+
+
 class TrainerConfig(BaseSettings):
     '''
     Trainer config settings, with .env namespace aliases
@@ -30,6 +33,7 @@ class TrainerConfig(BaseSettings):
     pretrained_path: str
     num_workers: int
 
+
 class AllWeatherMLConfig(BaseSettings):
     '''
     Namespaced ML config settings from .env
@@ -38,12 +42,14 @@ class AllWeatherMLConfig(BaseSettings):
     experiment_config: ExperimentConfig = ExperimentConfig()
     trainer_config: TrainerConfig = TrainerConfig()
 
+
 @lru_cache
 def getAllWeatherConfig():
     '''
     Lazy load all weather config
     '''
     return AllWeatherConfig()
+
 
 @lru_cache
 def getAllWeatherMLConfig():

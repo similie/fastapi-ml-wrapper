@@ -1,6 +1,6 @@
 import pytest
-from ..src.interfaces.ReqRes import BasePostRequest
-from ..src.prediction_models.RainfallPredictor import RainfallPredictor
+from src.interfaces.ReqRes import BasePostRequest
+from src.prediction_models.RainfallPredictor import RainfallPredictor
 # from src.prediction_models.rainfall_predictor.AllWeatherCubeRequest import CubeQueryRequest
 
 

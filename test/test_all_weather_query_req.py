@@ -1,10 +1,9 @@
 import json
 from os import path, getcwd
 from datetime import date
-from ..src.interfaces.CubeJsQueryRequest import CubeQueryRequest
-from ..src.prediction_models.rainfall_predictor.AllWeatherCubeRequest import makeAllWeatherQueryReq
-from ..src.prediction_models.rainfall_predictor.PredictionPostRequests import CubePredictionPostRequest
-
+from src.interfaces.CubeJsQueryRequest import CubeQueryRequest
+from src.prediction_models.rainfall_predictor.AllWeatherCubeRequest import makeAllWeatherQueryReq
+from src.prediction_models.rainfall_predictor.PredictionPostRequests import CubePredictionPostRequest
 
 
 def loadJsonFixture(getFilteredVersion: bool):

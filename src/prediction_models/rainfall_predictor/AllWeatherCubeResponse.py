@@ -1,8 +1,8 @@
-import sys
-from os import path
 from datetime import datetime
-from ...interfaces.CubeJsQueryResponse import (QueryMeasuresResponse, 
-    CubeQueryResponse)
+from ...interfaces.CubeJsQueryResponse import (
+    QueryMeasuresResponse,
+    CubeQueryResponse
+)
 from .AllWeatherCubeRequest import AllWeatherQueryMeasures
 from .AllWeatherConfig import getAllWeatherConfig
 
@@ -25,21 +25,23 @@ class AllWeatherCubeQueryResponse(CubeQueryResponse):
     '''
     data: list[AllWeatherQueryMeasuresResponse]
 
-# Example response with a station dimension included in the request
-# {
-#   "all_weather.station": 27,
-#   "all_weather.date.hour": "2020-03-05T00:00:00.000",
-#   "all_weather.date": "2020-03-05T00:00:00.000",
-#   "all_weather.avg_wind_direction": 212.10892705300026,
-#   "all_weather.avg_wind_speed": 2.093035712838173,
-#   "all_weather.avg_soil_moisture": null,
-#   "all_weather.avg_dew_point": null,
-#   "all_weather.avg_solar": 512.4821428571429,
-#   "all_weather.avg_temperature": 29.301785673413956,
-#   "all_weather.avg_humidity": 83.37076595851353,
-#   "all_weather.avg_pressure": 1007.9321430751255,
-#   "all_weather.sum_precipitation": 0
-# },
+    # Example response with a station dimension included in the request
+    # [{...},
+    # {
+    #   "all_weather.station": 27,
+    #   "all_weather.date.hour": "2020-03-05T00:00:00.000",
+    #   "all_weather.date": "2020-03-05T00:00:00.000",
+    #   "all_weather.avg_wind_direction": 212.10892705300026,
+    #   "all_weather.avg_wind_speed": 2.093035712838173,
+    #   "all_weather.avg_soil_moisture": null,
+    #   "all_weather.avg_dew_point": null,
+    #   "all_weather.avg_solar": 512.4821428571429,
+    #   "all_weather.avg_temperature": 29.301785673413956,
+    #   "all_weather.avg_humidity": 83.37076595851353,
+    #   "all_weather.avg_pressure": 1007.9321430751255,
+    #   "all_weather.sum_precipitation": 0
+    # },
+    # {...}]
 
 
 def cleanCubeNameFromResponseKeys(res: str) -> str:

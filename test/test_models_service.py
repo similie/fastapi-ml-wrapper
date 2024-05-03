@@ -1,6 +1,6 @@
 import pytest
-from ..src.interfaces.ReqRes import BasePostRequest
-from ..src.prediction_models.AllModelsService import (
+from src.interfaces.ReqRes import BasePostRequest
+from src.prediction_models.AllModelsService import (
     getModelNames,
     modelForPayload,
     ensureValidModelName
@@ -53,7 +53,7 @@ def test_ensure_valid_model_name_3():
     assert payload.modelName == 'test'
 
 
-def test_ensure_valid_model_name_3():
+def test_ensure_valid_model_name_4():
     req = BasePostRequest(modelName='not-valid')
     payload = ensureValidModelName('not-valid', req)
     assert payload is None

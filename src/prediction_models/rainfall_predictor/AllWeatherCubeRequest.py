@@ -1,6 +1,4 @@
 from pydantic import Field
-from os import path
-import sys
 from ...interfaces.CubeJsQuery import TimeDimension, CubeQuery, QueryFilter
 from ...interfaces.CubeJsQueryResponse import QueryMeasures
 from ...interfaces.CubeJsQueryRequest import CubeQueryRequest

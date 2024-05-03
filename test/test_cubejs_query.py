@@ -1,4 +1,4 @@
-from ..src.interfaces.CubeJsQuery import TimeGranularity, QueryMeasures
+from src.interfaces.CubeJsQuery import TimeGranularity, QueryMeasures
 # Note. TimeDimension, QueryFilter & CubeQuery are not tested as they are
 # simple subclassess of Pydantic's BaseModel
 
