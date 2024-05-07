@@ -3,7 +3,7 @@ from fastapi import BackgroundTasks
 from pydantic import ValidationError
 from .BasePredictor import BasePredictor
 from ..interfaces.ReqRes import TemplateResponse, DataTaskResponse
-# (BackgroundTaskResponse, WebhookRequest, WebhookResponse)
+# TODO: when webhooks implemented: (BackgroundTaskResponse, WebhookRequest, WebhookResponse)
 from .rainfall_predictor.AllWeatherCubeLoader import loadJson
 from .rainfall_predictor.PredictionPostRequests import (
     CubePredictionPostRequest,
@@ -18,9 +18,6 @@ class RainfallPredictor(BasePredictor):
     '''
     Implementation class of abstract BasePredictor with typed Payloads
     '''
-    # def __init__(self, payload) -> None:
-    #     super().__init__(payload)
-
     async def template(self) -> TemplateResponse:
         t = await super().template()
         t.notes = '''
@@ -38,8 +35,9 @@ class RainfallPredictor(BasePredictor):
         json = loadJson(payload.dateRange, stations)
         return json
 
-    async def fineTune(self, payload: Any):
-        return super().fineTune(payload)
+    # TODO when base class is implemented
+    # async def fineTune(self, payload: Any):
+    #     return super().fineTune(payload)
 
     def guardPredictionPayload(
             self,
@@ -48,28 +46,10 @@ class RainfallPredictor(BasePredictor):
         '''
         Attempts to validate the payload in the Predict pathway to one of the
         expected types. Returns a validated model instance if payload can be
-        validated against either class or throws.
+        validated against either input class or throws.
         '''
         noop = 0
-
-        # print('in Rainfall predictor, guardPayload')
-        # print(payload.model_dump_json(indent=4))
-        # print(f'keys: {payload.model_dump().keys()}')
         modelDict = payload.model_dump()
-        # print(f'{modelDict['modelName']}')
-        # print(f'{modelDict['webhook']}')
-
-        # hook = WebhookRequest.model_validate(modelDict['webhook'])
-        # print(hook.model_dump())
-        # s = '{
-        #  "station":27,"avg_dew_point":8.69,"hour":"2024-02-29T13:00:00Z",
-        #  "date":"2024-02-29T13:00:00Z","avg_wind_direction":179.81,
-        #  "avg_wind_speed":6.19,"avg_soil_moisture":null,"avg_solar":null,
-        #  "avg_temperature":9.38,"avg_humidity":95,"avg_pressure":1007.38,
-        #  "sum_precipitation":0.32
-        #  }'
-        # qms = AllWeatherQueryMeasuresResponse.model_validate_json(s)
-        # print(qms.model_dump())
 
         try:
             model = CubePredictionPostRequest.model_validate(modelDict) # noqa F841
@@ -116,6 +96,3 @@ class RainfallPredictor(BasePredictor):
             message=f'Inference in {self.__class__.__name__},count:{len(predictions[0].data)}',
             data=predictions
         )
-
-    async def train(self, payload: Any):
-        return super().train(payload)

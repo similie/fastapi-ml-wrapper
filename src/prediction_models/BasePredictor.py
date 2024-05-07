@@ -83,10 +83,11 @@ class BasePredictor(abc.ABC):
         '''
         pass
 
-    @abc.abstractmethod
-    async def train(self, payload: Any) -> Any:
-        pass
+    # TODO: Train and Fine-tune pathways using websockets or callbacks+events
+    # @abc.abstractmethod
+    # async def train(self, payload: Any) -> Any:
+    #     pass
 
-    @abc.abstractmethod
-    async def fineTune(self, payload: Any) -> Any:
-        pass
+    # @abc.abstractmethod
+    # async def fineTune(self, payload: Any) -> Any:
+    #     pass

@@ -66,13 +66,23 @@ def groupdf(df):
     return pd.concat(res)
 
 
+def pathForPretrainedPickle(pklFile: str) -> str:
+    '''
+    Constructs a path to the expected pickle file. If the file doesn't
+    exist, normally the caller will configure and save a pickle to the
+    inference checkpoints folder with the name passed in the `pklFile` arg.
+    '''
+    inference_path = config.inference_checkpoints
+    result = path.join(getcwd(), inference_path, pklFile)
+
+    return result
+
+
 def max_transform(y: np.array):
     '''
     Loads the fitted normalizer to scale the input data target to unit scale.
     '''
-    p = path.abspath(
-        path.join(getcwd(), pretrain_path, '..', 'pickle', 'maxabs.pkl')
-    )
+    p = pathForPretrainedPickle('maxabs.pkl')
     if path.isfile(p):
         maxabs = pickle.load(open(p, 'rb'))
         y_s = maxabs.transform(y.reshape(-1, y.shape[-1])).reshape(y.shape)
@@ -98,9 +108,8 @@ def standard_transform(X_: np.array):
     '''
     Loads fitted standardscaler for the input data.
     '''
-    p = path.abspath(
-        path.join(getcwd(), pretrain_path, '..', 'pickle', 'standard.pkl')
-    )
+    p = pathForPretrainedPickle('standard.pkl')
+
     X = X_[:, :, :-1]
     if path.isfile(p):
         standard = pickle.load(open(p, 'rb'))
@@ -118,9 +127,7 @@ def max_inverse_transform(y: np.array):
     Inverse scale the target.
     Currently not used in favor of our rescale_predictions function.
     '''
-    p = path.abspath(
-        path.join(getcwd(), pretrain_path, '..', 'pickle', 'maxabs.pkl')
-    )
+    p = pathForPretrainedPickle('maxabs.pkl')
     if path.isfile(p):
         maxabs = pickle.load(open(p, 'rb'))
         y_s = maxabs.inverse_transform(y.reshape(-1, 1))
@@ -134,9 +141,7 @@ def standard_inverse_transform(X: np.array):
     '''
     Inverse transform features, removed one hot encoded rainy_season data.
     '''
-    p = path.abspath(
-        path.join(getcwd(), pretrain_path, '..', 'pickle', 'standard.pkl')
-    )
+    p = pathForPretrainedPickle('standard.pkl')
     if path.isfile(p):
         standard = pickle.load(open(p, 'rb'))
         X_s = standard.inverse_transform(X[:, :-2])

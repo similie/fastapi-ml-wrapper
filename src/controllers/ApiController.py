@@ -51,13 +51,12 @@ async def model_schema(model_name: str) -> BaseResponse:
     model = modelForPayload(BasePostRequest(modelName=model_name))
     if model is not None:
         result = await model.template()
-        print(result)
+        # print(result)
         return result.model_dump()
 
     return Response('Resource not found', 404)
 
 
-# TODO: Endpoints for fine-tuning & training
 @routes.post('/predict/{model_name}')
 async def run_model_inference(model_name: str, req: BasePostRequest, taskManager: BackgroundTasks):
     '''
@@ -77,35 +76,36 @@ async def run_model_inference(model_name: str, req: BasePostRequest, taskManager
     return Response('Resource not found', 404)
 
 
-@routes.post('/fine-tune/{model_name}')
-async def fine_tune_model(model_name: str, req: BasePostRequest):
-    '''
-    Trigger fine-tuning from a known data source. This method returns immediately
-    and runs the task in a background thread. To receive progress reports, you
-    should also specify callback hooks in your post request.
+# TODO: Endpoints for fine-tuning & training
+# @routes.post('/fine-tune/{model_name}')
+# async def fine_tune_model(model_name: str, req: BasePostRequest):
+#     '''
+#     Trigger fine-tuning from a known data source. This method returns immediately
+#     and runs the task in a background thread. To receive progress reports, you
+#     should also specify callback hooks in your post request.
 
-    See the model template for details of the expected body format.
-    '''
-    model = modelForPayload(BasePostRequest(modelName=model_name))
-    if model is not None:
-        res = await model.fineTune(req)
-        return res
+#     See the model template for details of the expected body format.
+#     '''
+#     model = modelForPayload(BasePostRequest(modelName=model_name))
+#     if model is not None:
+#         res = await model.fineTune(req)
+#         return res
 
-    return Response('Resource not found', 404)
+#     return Response('Resource not found', 404)
 
 
-@routes.post('/fine-tune-with-csv/{model_name}')
-async def fine_tune_with_csv_upload(model_name: str, req: BasePostRequest):
-    '''
-    Upload a file (csv) and trigger fine-tuning. This method returns immediately
-    and runs the task in a background thread. To receive progress reports, you
-    should also specify callback hooks in your post request.
+# @routes.post('/fine-tune-with-csv/{model_name}')
+# async def fine_tune_with_csv_upload(model_name: str, req: BasePostRequest):
+#     '''
+#     Upload a file (csv) and trigger fine-tuning. This method returns immediately
+#     and runs the task in a background thread. To receive progress reports, you
+#     should also specify callback hooks in your post request.
 
-    See the model template for details of the expected body format.
-    '''
-    model = modelForPayload(BasePostRequest(modelName=model_name))
-    if model is not None:
-        res = await model.fineTune(req)
-        return res
+#     See the model template for details of the expected body format.
+#     '''
+#     model = modelForPayload(BasePostRequest(modelName=model_name))
+#     if model is not None:
+#         res = await model.fineTune(req)
+#         return res
 
-    return Response('Resource not found', 404)
+#     return Response('Resource not found', 404)

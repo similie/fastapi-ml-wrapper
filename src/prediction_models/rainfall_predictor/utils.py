@@ -7,7 +7,6 @@ import numpy as np
 import tensorflow as tf
 from sklearn.metrics import mean_absolute_error
 from .AllWeatherConfig import getAllWeatherMLConfig
-from keras._tf_keras.keras.optimizers import Adam
 
 
 config = getAllWeatherMLConfig()
@@ -22,9 +21,9 @@ device_name = tf.test.gpu_device_name()
 
 
 class NumpyEncoder(json.JSONEncoder):
-    """
+    '''
     Utility class for jsonify function to convert numpy array to json
-    """
+    '''
     def default(self, obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
@@ -42,19 +41,13 @@ class NumpyEncoder(json.JSONEncoder):
 #     plt.savefig('./plots/predictions.pdf')
 
 
-def reload_model(filename: str, prefixFolder: str | None = None):
-    """
+def reload_model(filename: str):
+    '''
     load .keras model checkpoint from the pretrain_path set in the config.
     If prefix folder is specified (e.g. for tests) it will be prepended to the
     pretrain_path, before constructing the final path.
-    """
-    # p = path.abspath(path.join(getcwd(), pretrain_path, filename))
-    p: str = pretrain_path
-    if prefixFolder is not None:
-        p = path.join(prefixFolder, pretrain_path)
-
-    p = path.join(getcwd(), p, filename)
-# HERE? 
+    '''
+    p = path.join(getcwd(), config.inference_checkpoints, filename)
     model = tf.keras.models.load_model(p)
     if len(model.layers) > 2:
         for layer in model.layers:
@@ -65,11 +58,11 @@ def reload_model(filename: str, prefixFolder: str | None = None):
 
 
 def concatenate_latent_representation(encoder: any, X: np.array, y: np.array = None):
-    """
+    '''
     Concatenate the encoder layer 1 output with the
     features for the forecaster. Should only need the
     `X` array for the current model.
-    """
+    '''
     with tf.device(device_name):
         X_ = np.concatenate([X, encoder.predict(X)], axis=-1)
         if isinstance(y, np.ndarray):
@@ -90,17 +83,17 @@ def compute_stochastic_dropout(model: any, X_test, y_test):
 
 
 def jsonify_ndarray(arr: np.array):
-    """
+    '''
     Convert numpy array to json.
-    """
+    '''
     return json.dumps(arr.tolist(), cls=NumpyEncoder)
 
 
 def rescale_predictions(predictions: np.array):
-    """
+    '''
     Apply a renormilization factor to the model
     predictions.
-    """
+    '''
     p = predictions.copy()
     _indices = p > p.max()*0.70
     p[_indices] = p[_indices]*3.2

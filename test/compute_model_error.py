@@ -1,3 +1,4 @@
+from os import getcwd, path
 import json
 import numpy as np
 from src.prediction_models.rainfall_predictor.dataset import (
@@ -15,15 +16,16 @@ from src.prediction_models.rainfall_predictor.utils import (
     jsonify_ndarray,
     # rescale_predictions
 )
-from src.prediction_models.rainfall_predictor.AllWeatherConfig import getAllWeatherConfig
+from src.prediction_models.rainfall_predictor.AllWeatherConfig import getAllWeatherMLConfig
 
 
 if __name__ == "__main__":
-    config = getAllWeatherConfig()  # should I instantiate this in the
-    prediction_window = config.experiment_predicion_window   # header?
+    config = getAllWeatherMLConfig()
+    prediction_window = config.experiment_config.prediction_window
 
-    encoder = reload_model('./pretrained_checkpoints/encoder.keras')
-    fc_model = reload_model('./pretrained_checkpoints/forecaster.keras')
+    p = path.join(getcwd(), config.inference_checkpoints)
+    encoder = reload_model(path.join(p, 'encoder.keras'))
+    fc_model = reload_model(path.join(p, 'forecaster.keras'))
 
     with open('./tmp/all_the_weather.json') as f:
         d = json.load(f)
