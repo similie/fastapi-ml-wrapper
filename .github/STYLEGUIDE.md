@@ -12,20 +12,37 @@ Please do:
 
 ## Code Layout and Formatting
 
-### Indentation
-
-- Use 4 spaces per indentation level.
-
 ### Line Length
 
 - Limit all lines to a maximum of 119 characters for code and 112 for comments and docstrings.
+
+### Indentation
+
+- Use 4 spaces per indentation level.
+- For imports that use multiple objects from a module. If the list of imports fits within the line length constraint, place all of your imported objects on the same line. If they overflow the line length constraint, use the bracket notation and place every object onto it's own line with a single level of indentation. The closing bracket should be on a new line, idented to the same level as the imported objects.
+```
+e.g
+from example_library_one import function_one, function_two
+
+from example_library import (
+    function_one,
+    function_two,
+    function_three,
+    ClassOne,
+    ClassTwo,
+    ClassThree
+    )
+```
+- Use the same indentation strategy for functions/methods. Everything on the same line unless it overflows the line length constraint, in which case, every parameter on it's own line, with the closing bracket also on it's own line.
 
 ### Imports
 
 - Imports should be on separate lines and grouped in the following order:
     1. Standard library imports.
     2. Related third-party imports.
-    3. Local application/library-specific imports.
+    3. Local application/library-specific imports.  
+
+See indentation strategy above for long sequences of imports  
 
 ### Whitespace
 
