@@ -26,8 +26,8 @@ from .TestPredictor import ATestPredictor  # noqa
 # - the value associated with the key doesn't resolve to a known class,
 # - that class isn't a subclass of BasePredictor (for type narrowing)
 _allModels = {
-    'rainfall': 'RainfallPredictor',
-    'test': 'ATestPredictor'
+    'test': 'ATestPredictor',
+    'rainfall_predictor': 'RainfallPredictor'
 }
 
 
@@ -36,6 +36,21 @@ def getModelNames():
     Return the list of available models
     '''
     return list(_allModels.keys())
+
+
+def ensureValidModelName(modelName: str, payload: BasePostRequest) -> BasePostRequest | None:
+    '''
+    Ensures that the modelName is present in the payload and is also one of the
+    available models in the container. Returns a model if the name was valid or
+    None otherwise.
+    '''
+    if (_allModels.__contains__(payload.modelName)):
+        return payload
+    elif (_allModels.__contains__(modelName)):
+        payload.modelName = modelName
+        return payload
+    else:
+        return None
 
 
 def modelForPayload(payload: BasePostRequest):

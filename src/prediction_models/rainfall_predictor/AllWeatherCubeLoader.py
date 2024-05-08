@@ -8,7 +8,7 @@ from .AllWeatherConfig import getAllWeatherConfig
 
 def loadJson(dateRange: list[str], stationIds: list[int] = []):
     config = getAllWeatherConfig()
-    baseUrl = config.cube_restapi
+    baseUrl = config.cube_rest_api
     req = makeAllWeatherQueryReq(dateRange, stationIds)
     modelDump = req.model_dump(mode='json', exclude_unset=True, exclude_none=True)
     # Note. Doesn't like my double quotes, switch them to %22 from %27

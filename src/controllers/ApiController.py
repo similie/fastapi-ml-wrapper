@@ -1,11 +1,15 @@
-from fastapi import APIRouter, Response  # , Request, BackgroundTasks
-
+# from time import sleep
+from fastapi import APIRouter, Response, BackgroundTasks
 from app.config import getConfig
-from ..prediction_models.AllModelsService import getModelNames, modelForPayload
+from ..prediction_models.AllModelsService import (
+    getModelNames,
+    ensureValidModelName,
+    modelForPayload
+)
 # Request structs
 from ..interfaces.ReqRes import BasePostRequest
 # Response structs
-from ..interfaces.ReqRes import BaseResponse, ListTypeResponse, TemplateRespose
+from ..interfaces.ReqRes import BaseResponse, ListTypeResponse
 
 # set up cached config
 config = getConfig()
@@ -46,16 +50,15 @@ async def model_schema(model_name: str) -> BaseResponse:
     '''
     model = modelForPayload(BasePostRequest(modelName=model_name))
     if model is not None:
-        modelSchema = await model.template()
-        result = TemplateRespose(template=modelSchema)
-        return result
+        result = await model.template()
+        # print(result)
+        return result.model_dump()
 
     return Response('Resource not found', 404)
 
 
-# TODO: Endpoints for: inference, fine-tuning & training
 @routes.post('/predict/{model_name}')
-async def run_model_inference(model_name: str, req: BasePostRequest):
+async def run_model_inference(model_name: str, req: BasePostRequest, taskManager: BackgroundTasks):
     '''
     Run inference on the specified model. This method returns immediately and
     runs the task in a background thread. To receive progress reports, you should
@@ -63,43 +66,46 @@ async def run_model_inference(model_name: str, req: BasePostRequest):
 
     See the model template for details of the expected body format.
     '''
-    model = modelForPayload(BasePostRequest(modelName=model_name))
-    if model is not None:
-        res = await model.predict(req)
-        return res
+    postReq = ensureValidModelName(model_name, req)
+    if postReq is not None:
+        model = modelForPayload(postReq)
+        if model is not None:
+            res = await model.predict(postReq, taskManager)
+            return res
 
     return Response('Resource not found', 404)
 
 
-@routes.post('/fine-tune/{model_name}')
-async def fine_tune_model(model_name: str, req: BasePostRequest):
-    '''
-    Trigger fine-tuning from a known data source. This method returns immediately
-    and runs the task in a background thread. To receive progress reports, you
-    should also specify callback hooks in your post request.
+# TODO: Endpoints for fine-tuning & training
+# @routes.post('/fine-tune/{model_name}')
+# async def fine_tune_model(model_name: str, req: BasePostRequest):
+#     '''
+#     Trigger fine-tuning from a known data source. This method returns immediately
+#     and runs the task in a background thread. To receive progress reports, you
+#     should also specify callback hooks in your post request.
 
-    See the model template for details of the expected body format.
-    '''
-    model = modelForPayload(BasePostRequest(modelName=model_name))
-    if model is not None:
-        res = await model.fineTune(req)
-        return res
+#     See the model template for details of the expected body format.
+#     '''
+#     model = modelForPayload(BasePostRequest(modelName=model_name))
+#     if model is not None:
+#         res = await model.fineTune(req)
+#         return res
 
-    return Response('Resource not found', 404)
+#     return Response('Resource not found', 404)
 
 
-@routes.post('/fine-tune-with-csv/{model_name}')
-async def fine_tune_with_csv_upload(model_name: str, req: BasePostRequest):
-    '''
-    Upload a file (csv) and trigger fine-tuning. This method returns immediately
-    and runs the task in a background thread. To receive progress reports, you
-    should also specify callback hooks in your post request.
+# @routes.post('/fine-tune-with-csv/{model_name}')
+# async def fine_tune_with_csv_upload(model_name: str, req: BasePostRequest):
+#     '''
+#     Upload a file (csv) and trigger fine-tuning. This method returns immediately
+#     and runs the task in a background thread. To receive progress reports, you
+#     should also specify callback hooks in your post request.
 
-    See the model template for details of the expected body format.
-    '''
-    model = modelForPayload(BasePostRequest(modelName=model_name))
-    if model is not None:
-        res = await model.fineTune(req)
-        return res
+#     See the model template for details of the expected body format.
+#     '''
+#     model = modelForPayload(BasePostRequest(modelName=model_name))
+#     if model is not None:
+#         res = await model.fineTune(req)
+#         return res
 
-    return Response('Resource not found', 404)
+#     return Response('Resource not found', 404)

@@ -1,3 +1,4 @@
+from pydantic import Field
 from ...interfaces.CubeJsQuery import TimeDimension, CubeQuery, QueryFilter
 from ...interfaces.CubeJsQueryResponse import QueryMeasures
 from ...interfaces.CubeJsQueryRequest import CubeQueryRequest
@@ -9,16 +10,18 @@ class AllWeatherQueryMeasures(QueryMeasures):
     Base all-weather field names that an all-weather station aggregation
     cube is called with. These should be prefixed by the cube_name before
     submitting a query to the Cube rest-api.
+    Serialisation fields are included to pass the values into the ML models
+    which have expect to receive field names without avg & sum prefixes.
     '''
-    avg_wind_direction: float | None = 0
-    avg_wind_speed: float | None = 0
-    avg_soil_moisture: float | None = 0
-    avg_dew_point: float | None = 0
-    avg_solar: float | None = 0
-    avg_temperature: float | None = 0
-    avg_humidity: float | None = 0
-    avg_pressure: float | None = 0
-    sum_precipitation: float | None = 0
+    avg_wind_direction: float | None = Field(serialization_alias='wind_direction', default=0)
+    avg_wind_speed: float | None = Field(serialization_alias='wind_speed', default=0)
+    avg_soil_moisture: float | None = Field(serialization_alias='soil_moisture', default=0)
+    avg_dew_point: float | None = Field(serialization_alias='dew_point', default=0)
+    avg_solar: float | None = Field(serialization_alias='solar', default=0)
+    avg_temperature: float | None = Field(serialization_alias='temperature', default=0)
+    avg_humidity: float | None = Field(serialization_alias='humidity', default=0)
+    avg_pressure: float | None = Field(serialization_alias='pressure', default=0)
+    sum_precipitation: float | None = Field(serialization_alias='precipitation', default=0)
 
 
 def makeAllWeatherQueryReq(dateRange: list[str], stationIds: list[int] = []):

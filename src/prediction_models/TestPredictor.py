@@ -1,14 +1,28 @@
 from typing import Any
+from fastapi import BackgroundTasks
+from pydantic import BaseModel
 from .BasePredictor import BasePredictor
+from ..interfaces.ReqRes import TemplateResponse
+
+
+class ATestTemplateProps(BaseModel):
+    '''
+    Properties model for ATestPredictor Template
+    '''
+    fieldOne: str = 'f1'
+    fieldTwo: int = 1
 
 
 class ATestPredictor(BasePredictor):
     '''
     Implementation class of abstract BasePredictor for testing
     '''
-    async def template(self):
-        await super().template()
-        return {'schema': 'test predictor schema'}
+    async def template(self) -> TemplateResponse:
+        t = await super().template()
+        t.notes = 'test predictor schema'
+        t.events = ['onTest']
+        t.accepts = ATestTemplateProps.model_json_schema()
+        return t
 
     async def fineTune(self, payload: Any):
         await super().fineTune(payload)
@@ -19,7 +33,7 @@ class ATestPredictor(BasePredictor):
         }
         return result
 
-    async def predict(self, payload: Any):
+    async def predict(self, payload: Any, taskManager: BackgroundTasks | None = None):
         await super().predict(payload)
         result = {
             'result': True,

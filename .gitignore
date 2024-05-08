@@ -2,11 +2,12 @@
 .env
 .venv
 __pycache__
-
+file.json
 .vscode/
 .test
 .coverage
 .pytest_cache
 *.pyc
-
-/tmp
+**/results
+**/lightning_logs
+**/tmp
