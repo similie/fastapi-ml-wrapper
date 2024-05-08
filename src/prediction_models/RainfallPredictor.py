@@ -1,4 +1,3 @@
-from typing import Any
 from fastapi import BackgroundTasks
 from pydantic import ValidationError
 from .BasePredictor import BasePredictor
