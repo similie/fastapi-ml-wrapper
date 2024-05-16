@@ -77,7 +77,10 @@ class RainfallPredictor(BasePredictor):
         data: list[AllWeatherQueryMeasuresResponse]
         if isinstance(payloadModel, CubePredictionPostRequest):
             cubeResult = await self.__loadCubeJson(payloadModel)
-            data = cubeResult.data
+            data: list = []
+            # remove avg, sum etc prefixes by exporting aliased fields
+            for d in cubeResult.data:
+                data.append(d.model_dump(by_alias=True))
         else:
             data = payloadModel.data
 
@@ -90,8 +93,9 @@ class RainfallPredictor(BasePredictor):
             # predictTimeOffsetDays=3  # or get from config
         )
 
+        print(f'\n\n{predictions}\n\n')
         return DataTaskResponse(
             status=200,
-            message=f'Inference in {self.__class__.__name__},count:{len(predictions[0].data)}',
-            data=predictions
+            message=f'Inference in {self.__class__.__name__},count:{len(predictions)}',
+            data=[predictions]
         )
