@@ -34,7 +34,7 @@ class CubeQueryResponse(CubeQueryRequest):
     # refreshKeyValues: any
     # usedPreAggregations: any
     # transformedQuery: any
-    requestId: str  # UUID-ish e.g. "f3c558e7-c3b5-4cb9-adcd-2c28e19aa551-span-1"
+    requestId: str | None = None  # UUID-ish e.g. "f3c558e7-c3b5-4cb9-adcd-2c28e19aa551-span-1"
     # annotation: dict
     dataSource: str
     dbType: str

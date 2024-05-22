@@ -14,5 +14,6 @@ def test_shapes():
     encoder = reload_model('encoder.keras')
     fc_model = reload_model('forecaster.keras')
 
+    # Note, valid for a 128 dimension trained model
     assert encoder.layers[0].batch_shape[1:] == (12, 9)
     assert fc_model.layers[0].batch_shape[1:] == (12, 137)

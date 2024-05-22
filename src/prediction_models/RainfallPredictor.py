@@ -93,7 +93,7 @@ class RainfallPredictor(BasePredictor):
             # predictTimeOffsetDays=3  # or get from config
         )
 
-        print(f'\n\n{predictions}\n\n')
+        # print(f'\n\n{predictions}\n\n')
         return DataTaskResponse(
             status=200,
             message=f'Inference in {self.__class__.__name__},count:{len(predictions)}',
