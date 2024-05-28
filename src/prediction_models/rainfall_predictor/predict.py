@@ -4,8 +4,7 @@ from .preprocessor import load_dataframe
 from .utils import (
     reload_model,
     concatenate_latent_representation,
-    rescale_predictions,
-    jsonify_ndarray
+    rescale_predictions
 )
 from .AllWeatherConfig import getAllWeatherMLConfig
 
@@ -15,7 +14,7 @@ prediction_window = config.experiment_config.prediction_window
 accelerator = config.trainer_config.accelerator
 
 
-def predict(weather_data: any):
+def predict(weather_data: any, debug: bool = False) -> list[float]:
     """
     Load pretrained models and generate predictions
     from input data (json)
@@ -33,10 +32,10 @@ def predict(weather_data: any):
 
     predictions = fc_model.predict(X_s_)
     preds = rescale_predictions(predictions)
-    mse = ((preds - y_p)**2).mean(axis=0)
 
-    print("\n\nMSE: ", mse[0].round(5), "\n")
-    print("Summary:\n\n", data.describe())
+    if debug is True:
+        mse = ((preds - y_p)**2).mean(axis=0)
+        print("\n\nMSE: ", mse[0].round(5), "\n")
+        print("Summary:\n\n", data.describe())
 
-    payload = jsonify_ndarray(preds)
-    return payload
+    return preds.flatten().tolist()

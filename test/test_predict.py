@@ -38,3 +38,7 @@ def test_predict():
     d = serialise_to_ml()
     predictions = predict(weather_data=d)
     assert predictions is not None
+
+    # weird side effect of missing 22% coverage for the debug flag.
+    predictions = predict(weather_data=d, debug=True)
+    assert predictions is not None

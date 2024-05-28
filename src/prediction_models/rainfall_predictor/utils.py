@@ -1,11 +1,9 @@
 import os
 from os import path, getcwd
 import json
-import tqdm
 import numpy as np
 # import matplotlib.pyplot as plt
 import tensorflow as tf
-from sklearn.metrics import mean_absolute_error
 from .AllWeatherConfig import getAllWeatherMLConfig
 
 
@@ -69,24 +67,6 @@ def concatenate_latent_representation(encoder: any, X: np.array, y: np.array = N
             y_ = np.concatenate([y, encoder.predict(y)], axis=-1)
             return X_, y_
         return X_
-
-
-def compute_stochastic_dropout(model: any, X_test, y_test):
-    '''
-    Cycle 20 through predictions with dropout to quantify error.
-    See https://arxiv.org/pdf/1506.02142.pdf
-    '''
-    scores = []
-    for i in tqdm(range(0, 20)):
-        scores.append(mean_absolute_error(y_test, model.predict(X_test).ravel()))
-    return scores, np.mean(scores), np.std(scores)
-
-
-def jsonify_ndarray(arr: np.array):
-    '''
-    Convert numpy array to json.
-    '''
-    return json.dumps(arr.tolist(), cls=NumpyEncoder)
 
 
 def rescale_predictions(predictions: np.array):

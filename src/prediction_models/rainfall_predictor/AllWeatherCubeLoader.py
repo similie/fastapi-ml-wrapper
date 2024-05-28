@@ -1,5 +1,4 @@
-from httpx import get, URL
-# TODO: import when headers is running, Request, Headers
+from httpx import get, URL, Headers
 from urllib import parse
 from .AllWeatherCubeRequest import makeAllWeatherQueryReq
 from .AllWeatherCubeResponse import AllWeatherCubeQueryResponse, cleanCubeNameFromResponseKeys
@@ -15,10 +14,10 @@ def loadJson(dateRange: list[str], stationIds: list[int] = []):
     queryParam = parse.urlencode(modelDump, encoding='utf-8').replace('%27', '%22')
 
     # TODO: Get auth token for production CubeJs instance
-    # headers = Headers(['Authorization','Bearer My-Madeup-Token'])
+    headers = Headers({"Authorization": config.cube_auth_key})
 
     url = URL(baseUrl)
-    res = get(url, params=queryParam)  # possibly POST to loose the URL encoding part. TODO: TEST
+    res = get(url, params=queryParam, headers=headers)  # possibly POST to loose the URL encoding part. TODO: TEST
     status = res.status_code
     jsonString = cleanCubeNameFromResponseKeys(res.text)
     result = AllWeatherCubeQueryResponse.model_validate_json(jsonString)
