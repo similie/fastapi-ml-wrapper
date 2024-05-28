@@ -1,10 +1,13 @@
-import httpx
-import json
 from os import path, getcwd
+import json
+import httpx
+from httpx import Response
+import respx
+from src.prediction_models.rainfall_predictor.AllWeatherConfig import getAllWeatherConfig
 from src.prediction_models.rainfall_predictor.AllWeatherCubeLoader import loadJson
 
 
-def loadJsonFixture():
+def loadJsonFixture() -> str:
     '''
     load the sample Json file to the Cube query resonse model format.
     Note: The query JSON contains:
@@ -21,19 +24,25 @@ def loadJsonFixture():
         return json.dumps(jsonData)
 
 
-# https://lundberg.github.io/respx/
-# import httpx
-# import pytest
+@respx.mock
+def test_decorator():
+    '''Demo function with: https://lundberg.github.io/respx/'''
+    my_route = respx.get("http://localhost:5002/foo")
+    response = httpx.get("http://localhost:5002/foo")
+    assert my_route.called
+    assert response.status_code == 200
 
 
-# def test_default(respx_mock):
-#     respx_mock.get("https://foo.bar/").mock(return_value=httpx.Response(204))
-#     response = httpx.get("https://foo.bar/")
-#     assert response.status_code == 204
+@respx.mock
+def test_load_all_weather_cube():
+    config = getAllWeatherConfig()
+    baseUrl = config.cube_rest_api
+    cubeResponse = loadJsonFixture()
 
-
-# @pytest.mark.respx(base_url="https://foo.bar")
-# def test_with_marker(respx_mock):
-#     respx_mock.get("/baz/").mock(return_value=httpx.Response(204))
-#     response = httpx.get("https://foo.bar/baz/")
-#     assert response.status_code == 204
+    apiRoute = respx.get(baseUrl).mock(return_value=Response(200, text=cubeResponse))
+    res = loadJson(["2020-03-05T00:00:00.000", "2020-03-12T23:59:59.999"], [27])
+    # Note: `res` is an AllweatherCubeQueryResponse (not an httpx.Response)
+    assert apiRoute.called
+    assert res.total is not None
+    assert res.data is not None
+    assert res.total == len(res.data)
