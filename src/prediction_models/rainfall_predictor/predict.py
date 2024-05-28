@@ -4,8 +4,7 @@ from .preprocessor import load_dataframe
 from .utils import (
     reload_model,
     concatenate_latent_representation,
-    rescale_predictions,
-    jsonify_ndarray
+    rescale_predictions
 )
 from .AllWeatherConfig import getAllWeatherMLConfig
 
@@ -40,5 +39,3 @@ def predict(weather_data: any, debug: bool = False) -> list[float]:
         print("Summary:\n\n", data.describe())
 
     return preds.flatten().tolist()
-    # payload = jsonify_ndarray(preds)
-    # return payload

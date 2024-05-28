@@ -1,6 +1,8 @@
 from os import getcwd, path
 import json
 import numpy as np
+import tqdm
+from sklearn.metrics import mean_absolute_error
 from src.prediction_models.rainfall_predictor.dataset import (
     gen_pred_dataset,
     standard_transform,
@@ -9,14 +11,33 @@ from src.prediction_models.rainfall_predictor.dataset import (
 )
 from src.prediction_models.rainfall_predictor.preprocessor import load_dataframe
 from src.prediction_models.rainfall_predictor.utils import (
+    NumpyEncoder,
     reload_model,
     # plot_predictions,
     concatenate_latent_representation,
-    compute_stochastic_dropout,
-    jsonify_ndarray,
+    # compute_stochastic_dropout,  # moved from utils, only used in this file
+    # jsonify_ndarray,  # moved from utils, only used in this file
     # rescale_predictions
 )
 from src.prediction_models.rainfall_predictor.AllWeatherConfig import getAllWeatherMLConfig
+
+
+def compute_stochastic_dropout(model: any, X_test, y_test):
+    '''
+    Cycle 20 through predictions with dropout to quantify error.
+    See https://arxiv.org/pdf/1506.02142.pdf
+    '''
+    scores = []
+    for i in tqdm(range(0, 20)):
+        scores.append(mean_absolute_error(y_test, model.predict(X_test).ravel()))
+    return scores, np.mean(scores), np.std(scores)
+
+
+def jsonify_ndarray(arr: np.array):
+    '''
+    Convert numpy array to json.
+    '''
+    return json.dumps(arr.tolist(), cls=NumpyEncoder)
 
 
 if __name__ == "__main__":

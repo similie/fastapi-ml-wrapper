@@ -137,15 +137,15 @@ def max_inverse_transform(y: np.array):
         return y
 
 
-def standard_inverse_transform(X: np.array):
-    '''
-    Inverse transform features, removed one hot encoded rainy_season data.
-    '''
-    p = pathForPretrainedPickle('standard.pkl')
-    if path.isfile(p):
-        standard = pickle.load(open(p, 'rb'))
-        X_s = standard.inverse_transform(X[:, :-2])
-        return X_s
-    else:
-        print("Scaler not fitted.")
-        return X
+# def standard_inverse_transform(X: np.array):
+#     '''
+#     Inverse transform features, removed one hot encoded rainy_season data.
+#     '''
+#     p = pathForPretrainedPickle('standard.pkl')
+#     if path.isfile(p):
+#         standard = pickle.load(open(p, 'rb'))
+#         X_s = standard.inverse_transform(X[:, :-2])
+#         return X_s
+#     else:
+#         print("Scaler not fitted.")
+#         return X

@@ -6,13 +6,16 @@ from src.prediction_models.rainfall_predictor.AllWeatherCubeResponse import (
     AllWeatherCubeQueryResponse
 )
 from src.prediction_models.rainfall_predictor.dataset import (
+    # TODO: gen_sequence,
+    # TODO: gen_labels,
+    gen_pred_dataset,
+    # TODO: groupdf,
     pathForPretrainedPickle,
-    standard_transform,
     max_transform,
     onehot_transform,
-    gen_pred_dataset,
-    # TODO: max_inverse_transform,
-    # TODO: standard_inverse_transform
+    standard_transform,
+    max_inverse_transform,
+    # deprecated. not used in this project: standard_inverse_transform
 )
 from src.prediction_models.rainfall_predictor.preprocessor import load_dataframe
 
@@ -68,11 +71,11 @@ def test_scalers():
     X_o = onehot_transform(X)
     y_s = max_transform(y)
     # X_inv = standard_inverse_transform(X_s)
-    # y_inv = max_inverse_transform(y_s)
+    y_inv = max_inverse_transform(y_s)
 
     assert X_s is not None
     assert X_o is not None
     assert y_s is not None
 
     # assert X_inv == X
-    # assert y_inv == y
+    assert y_inv is not None
