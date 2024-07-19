@@ -1,8 +1,20 @@
-from typing import Any
+import os
+import signal
+from multiprocessing import Process
+from logging import basicConfig, info
+from typing import Any, Annotated
+from httpx import Response, get
 import pytest
+from fastapi import FastAPI, Header, status
+from fastapi.responses import PlainTextResponse
+from fastapi.middleware.cors import CORSMiddleware
+from uvicorn import run as uvicornRun
+from time import sleep
+
 from src.interfaces.ReqRes import (
     BasePostRequest,
-    WebhookRequest
+    WebhookRequest,
+    WebhookResponse
 )
 from src.prediction_models.TestPredictor import ATestPredictor
 
@@ -94,3 +106,160 @@ def test_add_webhook():
 
     predictor.setWebhook(hook)
     assert len(predictor.webhooks) == 1
+
+
+# Set up a webhook response server and webook request & response instances.
+# We use a FastAPI server running in a separate process to receive the test
+# class' calls to POST->Webhook response. Tests are for internal status codes
+# returned for different pathways and a 200 response from the remote server for
+# the case that everything went as expected. We `kill` the remote server at the
+# end of the test. The routing functions will need to know about the data they
+# should be processing ~ they would be the systems setting up and sending the
+# calls with Webhooks in them. They are declared next along with the server.
+
+class webhookFixture():
+    req = WebhookRequest(
+        modelName='test',
+        callbackUrl=f'http://127.0.0.1:8088/test',
+        callbackAuthToken='e572b49a-f075-4c74-9be7-f3b5eb7ed33c',
+        eventNames=['onTest']
+    )
+    res = WebhookResponse(
+        message='web hook sent',
+        data=[1,2,3,4,5],
+        eventName='onTest'
+    )
+
+
+fixture = webhookFixture()
+origins = [
+    "http://localhost:8088",
+    "http://127.0.0.1:8088",
+]
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+@app.post('/test')
+def endpointForWebhook(
+    req: WebhookResponse,
+    x_webhook_token: Annotated[str | None, Header()] = None,
+) -> PlainTextResponse:
+    '''
+    Endpoint to mimic the destination server that would receive a webhook callback
+    We should ensure here that the header: `X-Webhook-Token` contains the correct
+    UUID and return a 20x status code. Otherwise we should send back a suitable
+    error code. Not Authorized if the web token is incorrect for example.
+    '''
+    info(req)
+    info(x_webhook_token)
+
+    msg = 'Thanks for calling'
+    code = 500
+    if x_webhook_token is not None:
+        if fixture.req.callbackAuthToken.hex == x_webhook_token:
+            if req.eventName != 'onTest':
+                code = status.HTTP_400_BAD_REQUEST
+            else:
+                code = status.HTTP_200_OK
+        else:
+            code = status.HTTP_401_UNAUTHORIZED
+
+    return PlainTextResponse(content=msg, status_code=code)
+
+@app.get('/test')
+def getEndPointForWebhook():
+    return PlainTextResponse(content='Thanks for calling', status_code=201)
+# app.add_api_route(path='/test', endpoint=endpointForWebhook, methods=['GET', 'POST'])
+
+# Global process container for FastAPI webserver
+_process = None
+
+def runServer():
+    '''Allocation and run the server'''
+    uvicornRun(app=app, host='localhost', port=8088)
+
+def startAPIServer():
+    '''Start the web server assigning the process class'''
+    global _process
+    _process = Process(target=runServer, args=(), daemon=True)
+    _process.start()
+
+@pytest.mark.asyncio
+async def test_call_webhook_if_needed():
+    basicConfig()
+    predictor = MockTestPredictor()
+
+    try:
+        startAPIServer()
+        sleep(1)
+
+        # 1. Ensure the web service is running
+        res = get('http://127.0.0.1:8088/test')
+        assert res.status_code == 201
+        assert 'Thanks for calling' in res.text
+
+        statusCode = await predictor.sendWebhookIfNeeded(fixture.res)
+        assert statusCode == 202  # http202-accepted, no webhooks added
+
+        predictor.setWebhook(fixture.req)
+        statusCode = await predictor.sendWebhookIfNeeded(fixture.res)
+        assert statusCode == 200
+
+        # TODO:
+        # incorrect token
+        # missing url in webhook
+
+    finally:
+        os.kill(_process.pid, signal.SIGTERM)
+        sleep(0.5)
+        assert _process.is_alive() is False
+
+
+#     mockResponse = Response(
+#         status_code=200,
+#         headers=[{'X-Webhook-Token', hookReq.callbackAuthToken.hex}],
+#         json=hookRes.model_dump_json()
+#     )
+
+#     predictor.setWebhook(hookReq)
+#     apiRoute = respx.post(baseUrl).mock(return_value=mockResponse)
+#     res = await predictor.sendWebhook(hookReq, hookRes)
+
+#     assert res is not None
+#     print(res)
+
+
+# ~~~ This works ~~~
+# @pytest.mark.asyncio
+# async def test_mock_fastapi():
+#     basicConfig()
+
+#     try:
+#         startAPIServer()
+#         info(f'1. PID:{_process.pid}, is alive:{_process.is_alive()}, exit code:{_process.exitcode}')
+#         info('sleep 2s')
+#         sleep(2)    # or find a way to wait until the server is responding
+
+#         info('continue')
+#         info(f'2. PID:{_process.pid}, is alive:{_process.is_alive()}, exit code:{_process.exitcode}')
+
+#         res = get('http://127.0.0.1:8088/test')
+
+#         assert res.status_code == 201
+#         assert 'Thanks for calling' in res.text
+
+#     finally:
+#         os.kill(_process.pid, signal.SIGTERM)
+#         sleep(0.5)
+#         info(f'3. PID:{_process.pid}, is alive:{_process.is_alive()}, exit code:{_process.exitcode}')
+
+#         assert _process.is_alive() is False
+
+    

@@ -2,7 +2,11 @@ from typing import Any
 from fastapi import BackgroundTasks
 from pydantic import BaseModel
 from .BasePredictor import BasePredictor
-from ..interfaces.ReqRes import TemplateResponse
+from ..interfaces.ReqRes import (
+    TemplateResponse,
+    BasePostRequest,
+    WebhookRequest
+)
 
 
 class ATestTemplateProps(BaseModel):
@@ -33,7 +37,7 @@ class ATestPredictor(BasePredictor):
         }
         return result
 
-    async def predict(self, payload: Any, taskManager: BackgroundTasks | None = None):
+    async def predict(self, payload: BasePostRequest, taskManager: BackgroundTasks | None = None):
         await super().predict(payload)
         result = {
             'result': True,
