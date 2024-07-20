@@ -33,7 +33,7 @@ def predict(weather_data: any, debug: bool = False) -> list[float]:
     predictions = fc_model.predict(X_s_)
     preds = rescale_predictions(predictions)
 
-    if debug is True:
+    if debug is True:   # pragma: no cover
         mse = ((preds - y_p)**2).mean(axis=0)
         print("\n\nMSE: ", mse[0].round(5), "\n")
         print("Summary:\n\n", data.describe())

@@ -15,7 +15,8 @@ from .rainfall_predictor.predict import predict
 
 class RainfallPredictor(BasePredictor):
     '''
-    Implementation class of abstract BasePredictor with typed Payloads
+    Implementation class of abstract BasePredictor with typed Payloads for
+    our Rainfall prediction models
     '''
     async def template(self) -> TemplateResponse:
         t = await super().template()
@@ -33,10 +34,6 @@ class RainfallPredictor(BasePredictor):
         # TODO: other params: limit, skip TZ
         json = loadJson(payload.dateRange, stations)
         return json
-
-    # TODO when base class is implemented
-    # async def fineTune(self, payload: Any):
-    #     return super().fineTune(payload)
 
     def guardPredictionPayload(
             self,

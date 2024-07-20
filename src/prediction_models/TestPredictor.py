@@ -1,11 +1,9 @@
-from typing import Any
 from fastapi import BackgroundTasks
 from pydantic import BaseModel
 from .BasePredictor import BasePredictor
 from ..interfaces.ReqRes import (
     TemplateResponse,
-    BasePostRequest,
-    WebhookRequest
+    BasePostRequest
 )
 
 
@@ -28,26 +26,8 @@ class ATestPredictor(BasePredictor):
         t.accepts = ATestTemplateProps.model_json_schema()
         return t
 
-    async def fineTune(self, payload: Any):
-        await super().fineTune(payload)
-        result = {
-            'result': True,
-            'count': 0,
-            'payload': payload
-        }
-        return result
-
     async def predict(self, payload: BasePostRequest, taskManager: BackgroundTasks | None = None):
         await super().predict(payload)
-        result = {
-            'result': True,
-            'count': 0,
-            'payload': payload
-        }
-        return result
-
-    async def train(self, payload: Any):
-        await super().train(payload)
         result = {
             'result': True,
             'count': 0,

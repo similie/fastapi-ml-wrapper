@@ -1,12 +1,12 @@
 import os
 import signal
 from multiprocessing import Process
-from logging import basicConfig, info
-from typing import Any, Annotated
+# from logging import basicConfig, info
+from typing import Any
 from json import loads
-from httpx import Response, get
+from httpx import get
 import pytest
-from fastapi import FastAPI, Header, status, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn import run as uvicornRun
@@ -71,28 +71,6 @@ async def test_predictor_predict():
     assert result['payload']['f1'] is not None
 
 
-# TODO when method is available
-# @pytest.mark.asyncio
-# async def test_predictor_finetune():
-#     predictor = MockTestPredictor()
-#     predictionPayload = {'f1': 0, 'f2': 1}
-#     result: dict[str, Any] = await predictor.fineTune(predictionPayload)
-#     assert result is not None
-#     assert result['count'] == 0
-#     assert result['payload']['f1'] is not None
-
-
-# TODO when method is available
-# @pytest.mark.asyncio
-# async def test_predictor_train():
-#     predictor = MockTestPredictor()
-#     predictionPayload = {'f1': 0, 'f2': 1}
-#     result: dict[str, Any] = await predictor.train(predictionPayload)
-#     assert result is not None
-#     assert result['count'] == 0
-#     assert result['payload']['f1'] is not None
-
-
 def test_add_webhook():
     predictor = MockTestPredictor()
     hook = WebhookRequest(
@@ -111,7 +89,7 @@ def test_add_webhook():
 
 # Set up a webhook response server and webook request & response instances.
 # We use a FastAPI server running in a separate process to receive the test
-# class' calls to POST->Webhook response. Tests are for internal status codes
+# class calls to POST->Webhook response. Tests are for internal status codes
 # returned for different pathways and a 200 response from the remote server for
 # the case that everything went as expected. We `kill` the remote server at the
 # end of the test. The routing functions will need to know about the data they
@@ -121,14 +99,25 @@ def test_add_webhook():
 class webhookFixture():
     req = WebhookRequest(
         modelName='test',
-        callbackUrl=f'http://127.0.0.1:8088/test',
+        callbackUrl='http://127.0.0.1:8088/test',
         callbackAuthToken='e572b49a-f075-4c74-9be7-f3b5eb7ed33c',
+        eventNames=['onTest']
+    )
+    reqBadToken = WebhookRequest(
+        modelName='test',
+        callbackUrl='http://127.0.0.1:8088/test',
+        callbackAuthToken='e572b49a-0000-4c74-9be7-f3b5eb7ed33c',
         eventNames=['onTest']
     )
     res = WebhookResponse(
         message='web hook sent',
-        data=[1,2,3,4,5],
+        data=[1, 2, 3, 4, 5],
         eventName='onTest'
+    )
+    resWrongEvent = WebhookResponse(
+        message='web hook sent',
+        data=[123],
+        eventName='onCounter'
     )
 
 
@@ -146,6 +135,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
 
 @app.post('/test')
 async def endpointForWebhook(req: Request) -> PlainTextResponse:
@@ -182,15 +172,18 @@ async def endpointForWebhook(req: Request) -> PlainTextResponse:
 
 @app.get('/test')
 def getEndPointForWebhook():
+    '''Test function to ensure the server is up before posting webhooks'''
     return PlainTextResponse(content='Thanks for calling', status_code=201)
-# app.add_api_route(path='/test', endpoint=endpointForWebhook, methods=['GET', 'POST'])
 
-# Global process container for FastAPI webserver
+
 _process = None
+'''Global process reference for FastAPI webserver. TODO: pytest fixture'''
+
 
 def runServer():
-    '''Allocation and run the server'''
+    '''Wrapper function to allocate and run the server'''
     uvicornRun(app=app, host='localhost', port=8088)
+
 
 def startAPIServer():
     '''Start the web server assigning the process class'''
@@ -198,16 +191,17 @@ def startAPIServer():
     _process = Process(target=runServer, args=(), daemon=True)
     _process.start()
 
+
 @pytest.mark.asyncio
 async def test_call_webhook_if_needed():
-    basicConfig()
+    # basicConfig()  # use if logging info('etc')
     predictor = MockTestPredictor()
 
     try:
         startAPIServer()
-        sleep(1)
+        sleep(2)
 
-        # 1. Ensure the web service is running
+        # ensure the web service is running
         res = get('http://127.0.0.1:8088/test')
         assert res.status_code == 201
         assert 'Thanks for calling' in res.text
@@ -219,54 +213,13 @@ async def test_call_webhook_if_needed():
         statusCode = await predictor.sendWebhookIfNeeded(fixture.res)
         assert statusCode == 200
 
-        # TODO:
-        # incorrect token
-        # missing url in webhook
+        statusCode = await predictor.sendWebhookIfNeeded(fixture.resWrongEvent)
+        assert statusCode == 202
+
+        statusCode = await predictor.sendWebhook(fixture.reqBadToken, fixture.res)
+        assert statusCode == 401
 
     finally:
         os.kill(_process.pid, signal.SIGTERM)
         sleep(0.5)
         assert _process.is_alive() is False
-
-
-#     mockResponse = Response(
-#         status_code=200,
-#         headers=[{'X-Webhook-Token', hookReq.callbackAuthToken.hex}],
-#         json=hookRes.model_dump_json()
-#     )
-
-#     predictor.setWebhook(hookReq)
-#     apiRoute = respx.post(baseUrl).mock(return_value=mockResponse)
-#     res = await predictor.sendWebhook(hookReq, hookRes)
-
-#     assert res is not None
-#     print(res)
-
-
-# ~~~ This works ~~~
-# @pytest.mark.asyncio
-# async def test_mock_fastapi():
-#     basicConfig()
-
-#     try:
-#         startAPIServer()
-#         info(f'1. PID:{_process.pid}, is alive:{_process.is_alive()}, exit code:{_process.exitcode}')
-#         info('sleep 2s')
-#         sleep(2)    # or find a way to wait until the server is responding
-
-#         info('continue')
-#         info(f'2. PID:{_process.pid}, is alive:{_process.is_alive()}, exit code:{_process.exitcode}')
-
-#         res = get('http://127.0.0.1:8088/test')
-
-#         assert res.status_code == 201
-#         assert 'Thanks for calling' in res.text
-
-#     finally:
-#         os.kill(_process.pid, signal.SIGTERM)
-#         sleep(0.5)
-#         info(f'3. PID:{_process.pid}, is alive:{_process.is_alive()}, exit code:{_process.exitcode}')
-
-#         assert _process.is_alive() is False
-
-    

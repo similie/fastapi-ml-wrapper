@@ -6,6 +6,7 @@ file.json
 .vscode/
 .test
 .coverage
+.coverage*
 .pytest_cache
 *.pyc
 **/results

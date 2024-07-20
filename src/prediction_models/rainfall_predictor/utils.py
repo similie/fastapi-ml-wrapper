@@ -63,7 +63,7 @@ def concatenate_latent_representation(encoder: any, X: np.array, y: np.array = N
     '''
     with tf.device(device_name):
         X_ = np.concatenate([X, encoder.predict(X)], axis=-1)
-        if isinstance(y, np.ndarray):
+        if isinstance(y, np.ndarray):  # pragma: no cover
             y_ = np.concatenate([y, encoder.predict(y)], axis=-1)
             return X_, y_
         return X_
