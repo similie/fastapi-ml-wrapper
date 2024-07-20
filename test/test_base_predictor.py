@@ -3,9 +3,10 @@ import signal
 from multiprocessing import Process
 from logging import basicConfig, info
 from typing import Any, Annotated
+from json import loads
 from httpx import Response, get
 import pytest
-from fastapi import FastAPI, Header, status
+from fastapi import FastAPI, Header, status, Request
 from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn import run as uvicornRun
@@ -147,31 +148,37 @@ app.add_middleware(
 )
 
 @app.post('/test')
-def endpointForWebhook(
-    req: WebhookResponse,
-    x_webhook_token: Annotated[str | None, Header()] = None,
-) -> PlainTextResponse:
+async def endpointForWebhook(req: Request) -> PlainTextResponse:
     '''
-    Endpoint to mimic the destination server that would receive a webhook callback
-    We should ensure here that the header: `X-Webhook-Token` contains the correct
-    UUID and return a 20x status code. Otherwise we should send back a suitable
-    error code. Not Authorized if the web token is incorrect for example.
+    Endpoint template for the destination server that receives webhooks. We
+    should ensure that the header: `X-Webhook-Token` contains the correct UUID
+    and return a 20x status code. Otherwise we send back a suitable error code.
     '''
-    info(req)
-    info(x_webhook_token)
-
     msg = 'Thanks for calling'
-    code = 500
-    if x_webhook_token is not None:
-        if fixture.req.callbackAuthToken.hex == x_webhook_token:
-            if req.eventName != 'onTest':
-                code = status.HTTP_400_BAD_REQUEST
-            else:
-                code = status.HTTP_200_OK
-        else:
-            code = status.HTTP_401_UNAUTHORIZED
+    authToken = req.headers.get('x-webhook-token')
 
-    return PlainTextResponse(content=msg, status_code=code)
+    # 1. No auth token, Bad Request
+    if authToken is None:
+        return PlainTextResponse(content=msg, status_code=400)
+
+    # Case 2. Incorrect auth token, Not authorised
+    expectedToken = str(fixture.req.callbackAuthToken)
+    if authToken != expectedToken:
+        return PlainTextResponse(content=msg, status_code=401)
+
+    # Case 3. Incorrect event name, not acceptable (or precondition failed?)
+    body = loads(await req.body())
+    hook: WebhookResponse = WebhookResponse.model_validate_json(body)
+    expectedEventName = fixture.res.eventName
+    if hook.eventName != expectedEventName:
+        # status.HTTP_406_NOT_ACCEPTABLE
+        # or ?
+        # status.HTTP_412_PRECONDITION_FAILED
+        return PlainTextResponse(content=msg, status_code=412)
+
+    # Case 4. No errors, OK
+    return PlainTextResponse(content=msg, status_code=200)
+
 
 @app.get('/test')
 def getEndPointForWebhook():
