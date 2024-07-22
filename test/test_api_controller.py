@@ -23,14 +23,13 @@ def test_get_all_models():
     responseData = ListTypeResponse.model_validate(res.json())
     assert responseData is not None
     assert len(responseData.data) > 0
-    assert responseData.data.__contains__('test')
 
 
 def test_get_all_model_contents():
     res = client.get('/api/v1/models')
     models = ListTypeResponse.model_validate(res.json())
     assert len(models.data) > 0
-    assert models.data.__contains__('test')
+    assert models.data.count('test') == 1
 
 
 # Section to test [40x] responses from an unknown model name
@@ -52,51 +51,13 @@ def test_post_unknown_model_prediction():
     assert res.status_code == 404
 
 
-# def test_get_unknown_model_fine_tune():
-#     '''
-#     Get method not allowed in /fine-tune endpoints
-#     '''
-#     res = client.get('/api/v1/fine-tune/unknown')
-#     assert res.status_code == 405
-
-
-# def test_post_unknown_model_fine_tune():
-#     res = client.post('/api/v1/fine-tune/unknown', json={"foo": "bar"})
-#     assert res.status_code == 404
-
-
-# def test_get_unknown_model_fine_tune_csv():
-#     '''
-#     Get method not allowed in csv upload endpoints
-#     '''
-#     res = client.get('/api/v1/fine-tune-with-csv/unknown')
-#     assert res.status_code == 405
-
-
-# def test_post_unknown_model_fine_tune_csv():
-#     res = client.post('/api/v1/fine-tune-with-csv/unknown', json={"foo": "bar"})
-#     assert res.status_code == 404
-
-
 # Section to test model responses to the test model
 def test_get_model_template():
     res = client.get('/api/v1/template/test')
-    print(res)
+    # print(res)
     assert res.status_code == 200
 
 
 def test_post_model_predict():
     res = client.post('/api/v1/predict/test', json={})
     assert res.status_code == 200
-
-
-# TODO when method is available
-# def test_post_model_fine_tune():
-#     res = client.post('/api/v1/fine-tune/test', json={})
-#     assert res.status_code == 200
-
-
-# TODO when method is available
-# def test_post_model_fine_tune_csv():
-#     res = client.post('/api/v1/fine-tune-with-csv/test', json={})
-#     assert res.status_code == 200
