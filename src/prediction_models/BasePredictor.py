@@ -41,7 +41,7 @@ class BasePredictor(abc.ABC):
             result = response.status_code
 
         except ValueError as e:  # noqa E722
-            print(e)
+            # print(e)
             result = 501
 
         return result

@@ -15,7 +15,10 @@ def load_dataframe(df: list | pd.DataFrame) -> pd.DataFrame:
     print(f'in load dataframe: list? {isinstance(df, list)}')
     if isinstance(df, list):
         df = pd.DataFrame(df)
+    print('before station')
+    print(df)
     df['station'] = df['station'].astype('str')
+    print('after station')
     df = duplicate_datetime(df.copy())
     df = set_dt_index(df.copy())
     df = negatives(df)

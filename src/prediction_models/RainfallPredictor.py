@@ -1,4 +1,4 @@
-from fastapi import BackgroundTasks
+from fastapi import BackgroundTasks, HTTPException, status
 from pydantic import ValidationError
 from .BasePredictor import BasePredictor
 from ..interfaces.ReqRes import TemplateResponse, DataTaskResponse
@@ -51,14 +51,20 @@ class RainfallPredictor(BasePredictor):
             model = CubePredictionPostRequest.model_validate(modelDict) # noqa F841
             return model
         except ValidationError:
-            noop = noop + 0
+            noop += 1
 
         try:
             model = ForecastPredictionPostRequest.model_validate(modelDict)
             return model
-        except ValidationError:  # as exception
+        except ValidationError:  # as exception:
             # print(exception.errors()[0]['type'])
-            raise
+            noop += 1
+
+        if noop > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Payload not one of the expected types'
+            )
 
     async def predict(
             self,
@@ -66,6 +72,7 @@ class RainfallPredictor(BasePredictor):
             taskManager: BackgroundTasks | None
             ):
         payloadModel = self.guardPredictionPayload(payload)
+
         # TODO branch here for inference inline (or in background if webhook supplied)
         # For straight inference, return a ForecastPredictionPostResponse. If a webhook
         # was supplied, return a BackgroundTaskResponse and add result data to the
