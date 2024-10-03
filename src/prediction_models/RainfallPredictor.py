@@ -9,7 +9,6 @@ from .rainfall_predictor.PredictionPostRequests import (
     ForecastPredictionPostRequest
 )
 from .rainfall_predictor.AllWeatherCubeRequest import AllWeatherQueryMeasures
-from .rainfall_predictor.AllWeatherCubeResponse import AllWeatherQueryMeasuresResponse
 from .rainfall_predictor.predict import predict
 
 
@@ -78,7 +77,7 @@ class RainfallPredictor(BasePredictor):
         # was supplied, return a BackgroundTaskResponse and add result data to the
         # WebhookResponse instance, returned via `sendWebhookIfNeeded`
 
-        data: list[AllWeatherQueryMeasuresResponse]
+        data: list
         if isinstance(payloadModel, CubePredictionPostRequest):
             cubeResult = await self.__loadCubeJson(payloadModel)
             data: list = []
@@ -86,18 +85,18 @@ class RainfallPredictor(BasePredictor):
             for d in cubeResult.data:
                 data.append(d.model_dump(by_alias=True))
         else:
-            data = payloadModel.data
+            # convert Pydantic classes to plain dict type
+            data = payloadModel.model_dump()['data']
 
-        # request `data` is now either the input weather forcast or station measurements
-        # pass [data] into model for inference
+        # request `data` is now either the input weather forcast or aggregated
+        # station measurements from the cube-server, in python dict format.
         predictions = predict(
-            data
+            weather_data=data
             # TODO: check if we should pass first or last date into Predictor.
             # startDateUTC=data[0].date,
             # predictTimeOffsetDays=3  # or get from config
         )
 
-        # print(f'\n\n{predictions}\n\n')
         return DataTaskResponse(
             status=200,
             message=f'Inference in {self.__class__.__name__},count:{len(predictions)}',

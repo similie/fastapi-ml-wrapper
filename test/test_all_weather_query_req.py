@@ -6,7 +6,7 @@ from src.prediction_models.rainfall_predictor.AllWeatherCubeRequest import makeA
 from src.prediction_models.rainfall_predictor.PredictionPostRequests import CubePredictionPostRequest
 
 
-def loadJsonFixture(getFilteredVersion: bool):
+def loadJsonCubeRequestFixture(getFilteredVersion: bool):
     # IMPORTANT. These terms need to align with the query json file names:
     # 'all_weather_cube_query_req_notfiltered'
     # 'all_weather_cube_query_req_filtered'
@@ -31,7 +31,7 @@ def cubePostReqFixture():
 
 
 def test_make_filtered_all_weather_query():
-    json = loadJsonFixture(True)
+    json = loadJsonCubeRequestFixture(True)
     stationId, startDate, endDate = cubePostReqFixture()
 
     postReq = CubePredictionPostRequest(
@@ -54,7 +54,7 @@ def test_make_filtered_all_weather_query():
 
 
 def test_make_non_filtered_all_weather_query():
-    json = loadJsonFixture(False)
+    json = loadJsonCubeRequestFixture(False)
     stationId, startDate, endDate = cubePostReqFixture()
 
     postReq = CubePredictionPostRequest(

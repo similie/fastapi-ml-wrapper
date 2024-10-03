@@ -1,19 +1,13 @@
-import pytest
 import respx
 from httpx import Response
 from json import loads
 from fastapi.testclient import TestClient
 from app.main import app
 from src.prediction_models.rainfall_predictor.AllWeatherConfig import getAllWeatherConfig
-from src.prediction_models.rainfall_predictor.AllWeatherCubeResponse import (
-    AllWeatherCubeQueryResponse,
-    cleanCubeNameFromResponseKeys
-)
-from test.fixtures.all_weather import loadJsonFixture
 from src.prediction_models.rainfall_predictor.PredictionPostRequests import (
-#     CubePredictionPostRequest,
     ForecastPredictionPostRequest
 )
+from test.fixtures.all_weather import loadJsonFixture, serialiseToML
 
 client = TestClient(app)
 
@@ -75,19 +69,13 @@ def test_post_model_predict_forecast_payload():
     #     }]
     # }
     cubeResponse = loadJsonFixture()
-    jsonString = cleanCubeNameFromResponseKeys(cubeResponse)
-    model = AllWeatherCubeQueryResponse.model_validate_json(jsonString)
-    print(model.data[0].model_dump_json(by_alias=True))
-    # data = []
-    # for d in res.data:
-    #     data.append(d.model_dump(by_alias=True))
-    
-    # req = {
-    #     "modelName": "rainfall_predictor",
-    #     "data": data
-    # }
+    data = serialiseToML(cubeResponse)
+    # Validate that the input object is the expected type
+    req = ForecastPredictionPostRequest(
+        data=data,
+        modelName='rainfall_predictor'
+    )
+    jsonData = req.model_dump_json()
+    res = client.post('/api/v1/predict/rainfall_predictor', json=loads(jsonData))
 
-    res = client.post('/api/v1/predict/rainfall_predictor', json=loads(jsonString))
-
-    print(res)
     assert res.status_code == 200

@@ -1,5 +1,3 @@
-from os import path, getcwd
-import json
 import httpx
 from httpx import Response
 import respx
