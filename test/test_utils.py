@@ -1,12 +1,7 @@
-from os import path, getcwd
 import json
 import numpy as np
 from pytest import approx
 from src.prediction_models.rainfall_predictor.AllWeatherConfig import getAllWeatherMLConfig
-from src.prediction_models.rainfall_predictor.AllWeatherCubeResponse import (
-    cleanCubeNameFromResponseKeys,
-    AllWeatherCubeQueryResponse
-)
 from src.prediction_models.rainfall_predictor.preprocessor import load_dataframe
 from src.prediction_models.rainfall_predictor.dataset import (
     gen_pred_dataset,
@@ -19,29 +14,7 @@ from src.prediction_models.rainfall_predictor.utils import (
     concatenate_latent_representation,
     rescale_predictions
 )
-
-
-def loadJsonFixture():
-    '''
-    load the sample Json file to the Cube query resonse model format.
-    '''
-    p = path.join(
-        getcwd(),
-        'test',
-        'fixtures',
-        'all_weather_cube_query_response.json'
-    )
-    with open(p, 'r') as file:
-        jsonData = json.load(file)
-        return json.dumps(jsonData)
-
-
-def serialise_to_ml():
-    jsonData = loadJsonFixture()
-    cleanedJson = cleanCubeNameFromResponseKeys(jsonData)
-    jsonData = json.loads(cleanedJson)
-    model = AllWeatherCubeQueryResponse.model_validate(jsonData)
-    return model.model_dump(by_alias=True)['data']
+from test.fixtures.all_weather import loadJsonFixture, serialiseToML
 
 
 def test_load_models():
@@ -78,7 +51,8 @@ def test_concat_latent_representation():
     config = getAllWeatherMLConfig()
     prediction_window = config.experiment_config.prediction_window
     encoder = reload_model('encoder.keras')
-    weather_data = serialise_to_ml()
+    jsonData = loadJsonFixture()
+    weather_data = serialiseToML(jsonData)
     data = load_dataframe(weather_data)
     X_p, y_p = gen_pred_dataset(data, prediction_window)
 

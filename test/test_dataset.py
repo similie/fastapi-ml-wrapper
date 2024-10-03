@@ -1,10 +1,4 @@
-import json
-from os import path, getcwd
 from pathlib import Path
-from src.prediction_models.rainfall_predictor.AllWeatherCubeResponse import (
-    cleanCubeNameFromResponseKeys,
-    AllWeatherCubeQueryResponse
-)
 from src.prediction_models.rainfall_predictor.dataset import (
     # TODO: gen_sequence,
     # TODO: gen_labels,
@@ -18,30 +12,7 @@ from src.prediction_models.rainfall_predictor.dataset import (
     # deprecated. not used in this project: standard_inverse_transform
 )
 from src.prediction_models.rainfall_predictor.preprocessor import load_dataframe
-
-
-def loadJsonFixture():
-    '''
-    load the sample Json file to the Cube query resonse model format.
-    '''
-    p = path.join(
-        getcwd(),
-        'test',
-        'fixtures',
-        'all_weather_cube_query_response.json'
-    )
-    with open(p, 'r') as file:
-        jsonData = json.load(file)
-        return json.dumps(jsonData)
-
-
-def serialise_to_ml():
-    jsonData = loadJsonFixture()
-    # cubeName = getAllWeatherConfig().cube_name
-    cleanedJson = cleanCubeNameFromResponseKeys(jsonData)
-    jsonData = json.loads(cleanedJson)
-    model = AllWeatherCubeQueryResponse.model_validate(jsonData)
-    return model.model_dump(by_alias=True)['data']
+from test.fixtures.all_weather import loadJsonFixture, serialiseToML
 
 
 def test_pickle_file_loader():
@@ -64,7 +35,8 @@ def test_scalers():
     Provide a json object of sample test data to
     test the scaler functions.
     """
-    data = serialise_to_ml()
+    jsonData = loadJsonFixture()
+    data = serialiseToML(jsonData)
     weather_data = load_dataframe(data)
     X, y = gen_pred_dataset(weather_data, 12)
     X_s = standard_transform(X)

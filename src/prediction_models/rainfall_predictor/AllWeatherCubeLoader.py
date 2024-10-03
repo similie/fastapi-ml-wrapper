@@ -18,12 +18,12 @@ def loadJson(dateRange: list[str], stationIds: list[int] = []):
 
     url = URL(baseUrl)
     res = get(url, params=queryParam, headers=headers)  # possibly POST to loose the URL encoding part. TODO: TEST
-    status = res.status_code
+    # status = res.status_code
     jsonString = cleanCubeNameFromResponseKeys(res.text)
     result = AllWeatherCubeQueryResponse.model_validate_json(jsonString)
     result.total = len(result.data)
 
-    print(f"Status: {status}, rows:{result.total}, Bytes: {res.num_bytes_downloaded}")
+    # print(f"Status: {status}, rows:{result.total}, Bytes: {res.num_bytes_downloaded}")
     return result
 
 # TODO load data frames from PG instance.

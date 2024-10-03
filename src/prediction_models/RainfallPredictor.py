@@ -1,4 +1,4 @@
-from fastapi import BackgroundTasks
+from fastapi import BackgroundTasks, HTTPException, status
 from pydantic import ValidationError
 from .BasePredictor import BasePredictor
 from ..interfaces.ReqRes import TemplateResponse, DataTaskResponse
@@ -9,13 +9,13 @@ from .rainfall_predictor.PredictionPostRequests import (
     ForecastPredictionPostRequest
 )
 from .rainfall_predictor.AllWeatherCubeRequest import AllWeatherQueryMeasures
-from .rainfall_predictor.AllWeatherCubeResponse import AllWeatherQueryMeasuresResponse
 from .rainfall_predictor.predict import predict
 
 
 class RainfallPredictor(BasePredictor):
     '''
-    Implementation class of abstract BasePredictor with typed Payloads
+    Implementation class of abstract BasePredictor with typed Payloads for
+    our Rainfall prediction models
     '''
     async def template(self) -> TemplateResponse:
         t = await super().template()
@@ -34,10 +34,6 @@ class RainfallPredictor(BasePredictor):
         json = loadJson(payload.dateRange, stations)
         return json
 
-    # TODO when base class is implemented
-    # async def fineTune(self, payload: Any):
-    #     return super().fineTune(payload)
-
     def guardPredictionPayload(
             self,
             payload: CubePredictionPostRequest | ForecastPredictionPostRequest
@@ -54,14 +50,20 @@ class RainfallPredictor(BasePredictor):
             model = CubePredictionPostRequest.model_validate(modelDict) # noqa F841
             return model
         except ValidationError:
-            noop = noop + 0
+            noop += 1
 
         try:
             model = ForecastPredictionPostRequest.model_validate(modelDict)
             return model
-        except ValidationError:  # as exception
+        except ValidationError:  # as exception:
             # print(exception.errors()[0]['type'])
-            raise
+            noop += 1
+
+        if noop > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Payload not one of the expected types'
+            )
 
     async def predict(
             self,
@@ -69,12 +71,13 @@ class RainfallPredictor(BasePredictor):
             taskManager: BackgroundTasks | None
             ):
         payloadModel = self.guardPredictionPayload(payload)
+
         # TODO branch here for inference inline (or in background if webhook supplied)
         # For straight inference, return a ForecastPredictionPostResponse. If a webhook
         # was supplied, return a BackgroundTaskResponse and add result data to the
         # WebhookResponse instance, returned via `sendWebhookIfNeeded`
 
-        data: list[AllWeatherQueryMeasuresResponse]
+        data: list
         if isinstance(payloadModel, CubePredictionPostRequest):
             cubeResult = await self.__loadCubeJson(payloadModel)
             data: list = []
@@ -82,18 +85,18 @@ class RainfallPredictor(BasePredictor):
             for d in cubeResult.data:
                 data.append(d.model_dump(by_alias=True))
         else:
-            data = payloadModel.data
+            # convert Pydantic classes to plain dict type
+            data = payloadModel.model_dump()['data']
 
-        # request `data` is now either the input weather forcast or station measurements
-        # pass [data] into model for inference
+        # request `data` is now either the input weather forcast or aggregated
+        # station measurements from the cube-server, in python dict format.
         predictions = predict(
-            data
+            weather_data=data
             # TODO: check if we should pass first or last date into Predictor.
             # startDateUTC=data[0].date,
             # predictTimeOffsetDays=3  # or get from config
         )
 
-        # print(f'\n\n{predictions}\n\n')
         return DataTaskResponse(
             status=200,
             message=f'Inference in {self.__class__.__name__},count:{len(predictions)}',
