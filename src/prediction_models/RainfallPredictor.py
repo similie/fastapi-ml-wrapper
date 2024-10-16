@@ -89,8 +89,7 @@ class RainfallPredictor(BasePredictor):
         # function expects plain dict types so model_dump into python dict.
         weatherData: list = []
         for d in data:
-            weatherData.append(d.model_dump(by_alias=True))
-
+            weatherData.append(d.model_dump(by_alias=True, exclude_unset=True))
 
         # request `data` is now either the input weather forcast or aggregated
         # station measurements from the cube-server, in python dict format.
