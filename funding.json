@@ -1,0 +1,39 @@
+{
+	"version": "v1.0.0",
+    "entity": {
+        "type": "organisation",              
+        "role": "owner",                     
+        "name": "Similie",                   
+        "email": "info@similie.org",                   
+        "description": "We are a social enterprise specializing in building solutions aimed at social impact",           
+        "webpageUrl": {
+            "url": "https://similie.com"
+        }
+    },
+    "projects": [{
+        "guid": "fastapi-ml-wrapper",                     
+        "name": "Parabl AI",                     
+        "description": "A machine-learning model and API framework for advancing AI analysis against envronmental data collection efforts",
+        "repositoryUrl": {
+            "url": "https://github.com/similie/fastapi-ml-wrapper"
+        },
+        "licenses": ["spdx:GPL-3.0"],               
+        "tags": ["IoT", "data collection" , "environmental sensing" , "early warning", "AI hazard prediction"]   
+    }],
+    "funding": {
+        "channels": [{
+            "guid": "bank-timor",         
+            "type": "bank"                   
+        }],
+        "plans": [{
+            "guid": "Project Support",     
+            "status": "active",            
+            "name": "Monthly funding plan",               
+            "description": "Support to expand and maintain Parabl Community",   
+            "amount": 0,                
+            "currency": "USD",          
+            "frequency": "monthly",     
+            "channels": ["bank-timor"]  
+        }]
+    }
+}

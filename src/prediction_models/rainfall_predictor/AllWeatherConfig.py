@@ -41,7 +41,7 @@ class AllWeatherMLConfig(BaseSettings):
     Namespaced ML config settings from .env
     '''
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
-    experiment_config: ExperimentConfig = ExperimentConfig()
+    experiment_config: ExperimentConfig = ExperimentConfig(BaseSettings)
     trainer_config: TrainerConfig = TrainerConfig()
     # relative path from the project root to your pretrained checkpoints.
     # Note for docs. Useful for sub-classes to add their own paths to their own checkpoints
